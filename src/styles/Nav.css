@@ -1,0 +1,48 @@
+
+.navbar{
+    position: sticky;
+    top: 0;
+    color: white;
+    /* background-color: aqua; */
+    display: flex;
+    justify-content: space-between;
+    padding: 2% 4%;
+}
+
+.oslab{
+    font-size: 25px;
+    font-weight: 500;
+}
+
+ul{
+    font-size: 18px;
+}
+
+.links li{
+    list-style: none;
+    display: inline-block;
+    padding: 5px 15px;
+    position: relative;
+}
+
+.navbar ul li ::after{
+    /* position: absolute; */
+    top: 0;
+    /* z-index: 100; */
+    content: '';
+    width: 0%;
+    height: 2px;
+    background: #f44336;
+    display: block;
+    margin: auto;
+    transition: 0.5s;
+}
+
+.navbar ul li:hover ::after{
+    content: '';
+    width: 100%;
+    height: 2px;
+    background: #f44336;
+    display: block;
+    margin: auto;
+}

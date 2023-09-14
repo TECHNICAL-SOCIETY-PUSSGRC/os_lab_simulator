@@ -1,0 +1,31 @@
+
+
+.blogs{
+    width: 80%;
+    border: 2px solid rebeccapurple;
+    margin: auto;
+    padding-top: 50px;
+    text-align: center;
+}
+
+.blogs h1{
+    font-size: 36px;
+    font-weight: 500;
+}
+
+.blogs p{
+    font-weight: 500;
+    color: rgb(79, 79, 77);
+}
+
+.blog_container{
+    margin-top: 5%;
+    border: 2px solid red;
+    display: flex;
+   
+}
+
+.blog_box{
+    width: 350px;
+    border: 1px solid #cfcece;
+}

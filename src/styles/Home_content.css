@@ -1,0 +1,54 @@
+
+.Home_content{
+   
+    width: 80%;
+    margin: auto;
+    padding-top: 100px;
+    text-align: center;
+    border-bottom: 2px solid black;
+}
+
+.Home_content h1{
+    font-size: 36px;
+    font-weight: 500;
+}
+
+
+
+.Home_content p{
+    font-weight: 500;
+    color: rgb(79, 79, 77);
+}
+
+
+
+.cards{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6%;
+
+}
+
+.card{
+    background-color: #f29eab;
+    color: black;
+    flex-basis: 30%;
+    margin-bottom: 3%;
+    border-radius: 10px;
+    padding:20px 12px;
+    box-sizing: border-box;
+
+}
+
+.card h3{
+    font-size: 20px;
+    text-align:center;
+    font-weight: 600;
+    margin:10px 0;
+
+}
+
+.card p{
+ color: rgb(2, 43, 29);
+ font-weight: 500;
+}
