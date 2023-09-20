@@ -9,8 +9,11 @@ import '../styles/Home.css'
 const Home = () => {
   return (
    <div >
+   
+   
      <div className='home_page'>
-        <Nav  />
+     <Nav  />
+        
         <Home_intro  />
        </div>
 
