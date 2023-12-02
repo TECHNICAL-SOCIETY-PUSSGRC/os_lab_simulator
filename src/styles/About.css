@@ -1,5 +1,26 @@
-
-
-
-
-
+.title-section {
+    height: 50vh;
+    background-image: linear-gradient(rgba(4,9,30,0.7),rgba(4,9,30,0.7)),url('../assets/bg1.jpeg');
+    background-position: center;
+    background-size: cover;
+    color: #fff;
+    text-align: center;
+}
+.title{
+    margin-top: 100px;
+}
+.our-team-container{
+    padding: 60px 0px;
+    text-align: center;
+}
+.about-us-page h1{
+    font-size: 36px;
+    font-weight: 500;
+}
+.team {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 60px 0px;
+}

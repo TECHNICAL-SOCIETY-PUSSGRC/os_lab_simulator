@@ -1,6 +1,4 @@
-import React from 'react'
 import '../styles/Home_intro.css'
-import Button from './Button'
 
 const Home_intro = () => {
   return (

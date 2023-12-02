@@ -1,0 +1,22 @@
+[
+    {
+        "name": "First Come First Serve (FCFS)",
+        "value": "FCFS"
+    },
+    {
+        "name": "Shortest Job First (SJF) (non-preemptive)",
+        "value": "SJF"
+    },
+    {
+        "name": "Shortest Remaining Job First (SRJF) (preemptive)",
+        "value": "SRJF"
+    },
+    {
+        "name": "Round Robin",
+        "value": "RR"
+    },
+    {
+        "name": "Priority",
+        "value": "Priority"
+    }
+]

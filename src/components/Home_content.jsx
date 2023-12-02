@@ -1,11 +1,10 @@
-import React from 'react'
 import '../styles/Home_content.css'
 
 const Home_content = () => {
   return (
     <div className='Home_content'>
-      <h1>Why we need Algorithms</h1>
-      <p>Purpose of CPU Scheduling Algorithms are listed below</p>
+      <h1>Why we need CPU Scheduling Algorithms</h1>
+      <p>Main purposes of CPU Scheduling Algorithms are listed below</p>
       <div className="cards">
         <div className="card">
          <div className="heading">

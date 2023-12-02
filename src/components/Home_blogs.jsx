@@ -1,4 +1,3 @@
-import React from 'react'
 import '../styles/Home_blogs.css'
 
 const Home_blogs = () => {
