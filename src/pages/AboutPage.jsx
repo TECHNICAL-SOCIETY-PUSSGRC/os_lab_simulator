@@ -2,7 +2,7 @@ import { Nav, TeamCard } from '../components'
 import '../styles/About.css'
 
 import ashishImg from '../assets/teamImage/ashishImg.png'
-import kavyaImg from '../assets/teamImage/kavyaImg.jpg'
+import kavyaImg from '../assets/teamImage/kavyaImg.png'
 import socialImg from '../assets/teamImage/Social.png'
 
 

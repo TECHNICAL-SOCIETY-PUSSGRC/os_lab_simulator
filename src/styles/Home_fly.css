@@ -7,11 +7,6 @@
     text-align: center;
     border-bottom: 2px solid black;
 }
-
-
-
-
-
 :root {
 	--rotate-speed: 40;
 	--count: 8; /* Defa.ult count, the DOM element sho.uld override this */
@@ -30,10 +25,10 @@ body {
 	position: relative;
 	aspect-ratio: 1 / 1;
 }
-.crop>ul:hover * {
+.saste-nashe:hover * {
 	animation-play-state: paused;
 }
-.crop>ul {
+.saste-nashe {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
@@ -43,15 +38,16 @@ body {
 	outline: 2px dotted magenta;
 	z-index: 1;
 }
-.saste-nashe> li {
+.saste-nashe-li {
 	position: absolute;
 	top: 50%;
 	transform: translateY(-50%);
-/* 	outline: 2px dashed cyan; */
-	width: 100%;
+	/*outline: 2px dashed cyan;
+	*/width: 100%;
 	animation: rotateCW calc(var(--rotate-speed) * 1s) var(--easing) infinite;
+	-webkit-animation: rotateCW calc(var(--rotate-speed) * 1s) var(--easing) infinite;
 }
-.card {
+.saste-nashe-card {
 	width: 27%;
 	display: flex;
 	flex-direction: column;
@@ -80,35 +76,6 @@ a {
 	color: #3B2ED0;
 	display: block;
 }
-svg {
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 0;
-}
-
-.saste-nashe>li:nth-child(2), .saste-nashe>li:nth-child(2) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -1s);
-}
-.saste-nashe>li:nth-child(3), .saste-nashe>li:nth-child(3) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -2s);
-}
-.saste-nashe>li:nth-child(4), .saste-nashe>li:nth-child(4) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -3s);
-}
-.saste-nashe>li:nth-child(5), .saste-nashe>li:nth-child(5) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -4s);
-}
-.saste-nashe>li:nth-child(6), .saste-nashe>li:nth-child(6) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -5s);
-}
-.saste-nashe>li:nth-child(7), .saste-nashe>li:nth-child(7) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -6s);
-}
-.saste-nashe>li:nth-child(8), .saste-nashe>li:nth-child(8) .card {
-	animation-delay: calc((var(--rotate-speed)/var(--count)) * -7s);
-}
-
 @keyframes rotateCW {
 	from {
 		transform: translate3d(0px, -50%, -1px) rotate(-45deg);

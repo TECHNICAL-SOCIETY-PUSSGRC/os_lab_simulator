@@ -84,9 +84,9 @@ const TeamCard = ({ name,image,social,id}) => {
                      
                       <div className='social-link' >
                       
-                     <a href=""><FaLinkedin/></a>             
-                     <a href=""> <FaGithub/></a>
-                     <a href="mailto:ashish3553singh@gmail.com"> <MdEmail/></a>
+                     <a href="https://www.linkedin.com/in/kavya2719/"  target='_blank'><FaLinkedin/></a>             
+                     <a href="https://github.com/kavya2719" target='_blank'> <FaGithub/></a>
+                     <a href="mailto:kavyagupta2719@gmail.com" target='_blank'> <MdEmail/></a>
                       </div>
                   </div>
               </div>

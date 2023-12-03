@@ -196,6 +196,10 @@ img
     width: 200px;
     height: 200px;
     transition: 0.5s;
+    -webkit-transition: 0.5s;
+    -moz-transition: 0.5s;
+    -ms-transition: 0.5s;
+    -o-transition: 0.5s;
 }
 
 .container .card .face.face1 {
