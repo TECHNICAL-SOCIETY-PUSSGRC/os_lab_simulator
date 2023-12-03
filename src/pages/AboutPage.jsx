@@ -2,6 +2,7 @@ import { Nav, TeamCard } from '../components'
 import '../styles/About.css'
 
 import ashishImg from '../assets/teamImage/ashishImg.png'
+import kavyaImg from '../assets/teamImage/kavyaImg.jpg'
 import socialImg from '../assets/teamImage/Social.png'
 
 
@@ -18,7 +19,7 @@ const About = () => {
 
         <div className='team'>
           <TeamCard name="Ashish Singh" id='1' image = {ashishImg} social={socialImg} />
-          <TeamCard name="Kavya Gupta" id='1' image={ashishImg}  social={socialImg} />
+          <TeamCard name="Kavya Gupta" id='2' image={kavyaImg}  social={socialImg} />
         </div>
       </div>
     </div>

@@ -19,26 +19,45 @@ img
 
 .back h2
 {
+    font-weight: 700;
+    font-size: 1.4rem;
     position: absolute;
 }
 
 .back p
 {
     position: absolute;
-    top: 50px;
-    font-size: 15px;
+    padding: .51rem .6rem;
+    top: 40px;
+    text-align: justify;
+    font-size: 18px;
 }
 
-.front h2
+
+.front-1 h2
 {
     position: absolute;
+    font-size: larger;
+    font-weight: 700;
+    padding: 10px;
+    top: 260px;
+    left:80px;
+    color: #d1f90a;
+}
+
+.front-2 h2
+{
+    position: absolute;
+    font-size: larger;
+    font-weight: 700;
     padding: 10px;
     top: 250px;
-    color: #000;
+    left:100px;
+    color: #d1f90a;
 }
 
 /* style the maincontainer class with all child div's of class .front */
-.maincontainer > .front
+.maincontainer-1 > .front
 {
     position: absolute;
     transform: perspective(600px) rotateY(0deg);
@@ -49,9 +68,17 @@ img
     backface-visibility: hidden; /* cant see the backside elements as theyre turning around */
     transition: transform .5s linear 0s;
 }
+.maincontainer-1:hover > .front
+{
+    transform: perspective(600px) rotateY(-180deg);
+    -webkit-transform: perspective(600px) rotateY(-180deg);
+    -moz-transform: perspective(600px) rotateY(-180deg);
+    -ms-transform: perspective(600px) rotateY(-180deg);
+    -o-transform: perspective(600px) rotateY(-180deg);
+}
 
 /* style the maincontainer class with all child div's of class .back */
-.maincontainer > .back
+.maincontainer-1 > .back
 {
     position: absolute;
     transform: perspective(600px) rotateY(180deg);
@@ -64,16 +91,58 @@ img
     backface-visibility: hidden; /* cant see the backside elements as theyre turning around */
     transition: transform .5s linear 0s;
 }
-
-.maincontainer:hover > .front
-{
-    transform: perspective(600px) rotateY(-180deg);
-}
-
-.maincontainer:hover > .back
+.maincontainer-1:hover > .back
 {
     transform: perspective(600px) rotateY(0deg);
 }
+
+
+
+/*      For card  2 */
+
+.maincontainer-2 > .front
+{
+    position: absolute;
+    transform: perspective(600px) rotateY(0deg);
+    
+    width: 302px;
+    height: 290px;
+    
+    backface-visibility: hidden; /* cant see the backside elements as theyre turning around */
+    transition: transform .5s linear 0s;
+}
+.maincontainer-2:hover > .front
+{
+    transform: perspective(600px) rotateY(180deg);
+    -webkit-transform: perspective(600px) rotateY(180deg);
+    -moz-transform: perspective(600px) rotateY(180deg);
+    -ms-transform: perspective(600px) rotateY(180deg);
+    -o-transform: perspective(600px) rotateY(180deg);
+}
+
+/* style the maincontainer class with all child div's of class .back */
+.maincontainer-2 > .back
+{
+    position: absolute;
+    transform: perspective(600px) rotateY(-180deg);
+    background: #262626;
+    color: #fff;
+    width: 302px;
+    height: 290px;
+    border-radius: 10px;
+    padding: 5px;
+    backface-visibility: hidden;
+    /*cantseethebacksideelementsastheyreturningaround*/transition: transform .5s linear 0s;
+    -webkit-transform: perspective(600px) rotateY(-180deg);
+    -moz-transform: perspective(600px) rotateY(-180deg);
+    -ms-transform: perspective(600px) rotateY(-180deg);
+    -o-transform: perspective(600px) rotateY(-180deg);
+}
+.maincontainer-2:hover > .back
+{
+    transform: perspective(600px) rotateY(0deg);
+}
+
 
 
 
@@ -89,7 +158,7 @@ img
     position: relative;
 }
 
-.container {
+.container-1 {
    position: absolute;
    background: transparent;
    display: flex;
@@ -105,67 +174,23 @@ img
    -o-transform:rotate(-90deg) ;
 }
 
-.container .card {
-    position: relative;
-    border-radius: 10px;
-}
 
-.container .card .icon {
-    /* position: absolute; */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #f00;
-    transition: 0.7s;
-    z-index: 1;
-}
-
-.container .card:nth-child(1) .icon {
-    background: #e07768;
-}
-
-.container .card:nth-child(2) .icon {
-    background: #6eadd4;
-}
-
-.container .card:nth-child(3) .icon {
-    background: #4aada9;
-}
-
-
-.container .card .icon .fa {
+.container-2 {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 80px;
-    transition: 0.7s;
-    color: #fff;
+    background: transparent;
+    display: flex;
+    gap: 20px;
+    top: 8%;
+    left: -70%;
+    /*z-index: 10000;
+    */justify-content: space-between;
+    transform:rotate(90deg) ;
+    -webkit-transform:rotate(90deg) ;
+    -moz-transform:rotate(90deg) ;
+    -ms-transform:rotate(90deg) ;
+    -o-transform:rotate(90deg) ;
 }
 
-.bg-face >div{
-   
-    width: 100%;
-    height: 100%;
-    background-image: url(../assets/teamImage/social01.png);
-    background-size: 100% 100%;
-    
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-}
-
-i {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 80px;
-    transition: 0.7s;
-    color: #fff;
-}
 
 .container .card .face {
     width: 200px;
@@ -209,18 +234,11 @@ i {
     -o-transform: translateY(30px);
 }
 
-.container .card .face.face1 .content {
-    opacity: 1;
-    transition: 0.5s;
-}
 
-.container .card:hover .face.face1 .content {
-    /* opacity: 1; */
-}
 
-.container .card .face.face1 .content i{
-    max-width: 100px;
-}
+
+
+
 
 .bg-face>h1{
     color:aqua ;
@@ -265,16 +283,20 @@ i {
   
 }
 
-.card{
-    background-color: none;
-}
 
-.face2>div{
+.c1{
     transform: rotate(90deg);
     -webkit-transform: rotate(90deg);
     -moz-transform: rotate(90deg);
     -ms-transform: rotate(90deg);
     -o-transform: rotate(90deg);
+}
+.c2{
+    transform: rotate(-90deg);
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
 }
 
 .social-link{
@@ -294,4 +316,7 @@ i {
 .content>h3>a{
     font-weight: 700;
 }
+
+
+ 
 
