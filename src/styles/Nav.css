@@ -1,4 +1,3 @@
-
 .navbar{
     position: sticky;
     top: 0;
@@ -7,26 +6,20 @@
     display: flex;
     justify-content: space-between;
     padding: 2% 4%;
-  
-   
 }
-
 .oslab{
     font-size: 25px;
     font-weight: 500;
 }
-
 ul{
     font-size: 18px;
 }
-
 .links li{
     list-style: none;
     display: inline-block;
     padding: 5px 15px;
     position: relative;
 }
-
 .navbar ul li ::after{
     /* position: absolute; */
     top: 0;
@@ -39,7 +32,6 @@ ul{
     margin: auto;
     transition: 0.5s;
 }
-
 .navbar ul li:hover ::after{
     content: '';
     width: 100%;

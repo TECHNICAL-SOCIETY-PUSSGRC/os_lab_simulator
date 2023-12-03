@@ -1,9 +1,15 @@
-import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../styles/Home_intro.css'
-import Button from './Button'
 
 const Home_intro = () => {
+
+  const navigate = useNavigate()
+
+  const handleChange = ()=>{
+      navigate('/docs')
+  }
   return (
+    <>
     <div className='home_intro'>
       <h1> CPU Scheduling Simulator </h1>
       <p>
@@ -14,10 +20,13 @@ const Home_intro = () => {
             </p>
 
 
-          <button>GET STARTED</button>
+            <button onClick={handleChange} class="button-85" role="button">Get Started</button>
+
 
       
     </div>
+ 
+</>
   )
 }
 

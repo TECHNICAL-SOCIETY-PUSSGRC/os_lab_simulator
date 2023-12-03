@@ -1,5 +1,32 @@
+.our-team-container{
+    width: 80%;
+    margin: 0 auto;
+}
 
-
-
-
-
+.title-section {
+    height: 30vh;
+    background-image: linear-gradient(rgba(4,9,30,0.7),rgba(4,9,30,0.7)),url('../assets/bg1.jpeg');
+    background-position: center;
+    background-size: cover;
+    color: #fff;
+    text-align: center;
+}
+.title{
+    text-align: center;
+}
+.our-team-container{
+    max-height: 70vh;
+    
+    text-align: center;
+}
+.about-us-page h1{
+    font-size: 36px;
+    font-weight: 700;
+}
+.team {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+ 
+   
+}
