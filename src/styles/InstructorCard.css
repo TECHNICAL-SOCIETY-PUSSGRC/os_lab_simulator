@@ -101,6 +101,7 @@ padding-bottom: 6rem;}
   position: relative;
   display: flex;
   margin-top: 10px;
+  color:#e21212;
 }
 
 .instructor-card .details .ins-content .social-icons a {

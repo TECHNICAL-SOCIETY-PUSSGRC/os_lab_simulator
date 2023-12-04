@@ -2,6 +2,8 @@ import React from 'react'
 import '../styles/InstructorCard.css'
 import sir1 from '../assets/teamImage/sir1.jpeg'
 import sir2 from '../assets/teamImage/sir2.jpg'
+import { FaFacebookSquare } from "react-icons/fa";
+
 
 const InstructorCard = () => {
   return (
@@ -17,7 +19,7 @@ const InstructorCard = () => {
           <h2> Kanwalpreet Singh Malhi</h2>
           <p>(Assis.Prof)</p>
           <div class="social-icons">
-            <a href="https://facebook.com" target='_blank'><i class="fa fa-facebook" aria-hidden="true"></i></a>
+            <a href="https://facebook.com" target='_blank'><FaFacebookSquare/></a>
             <a href="https://twitter.com" target='_blank'><i class="fa fa-twitter" aria-hidden="true"></i></a>
             <a href="https://www.linkedin.com/in/kanwalpreet-singh-malhi-91014928/"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
             <a href="https://instagram.com" target='_blank'><i class="fa fa-instagram" aria-hidden="true"></i></a>
