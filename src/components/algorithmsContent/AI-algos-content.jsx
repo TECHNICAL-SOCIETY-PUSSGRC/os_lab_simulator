@@ -8,6 +8,9 @@ export const AIalgos=()=>
           "Determines the optimal move in deterministic, perfect-information games",
           "Works well for games with a finite number of states"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
         "disadvantages": [
           "Expensive for games with a large state space",
           "Does not perform well in games with imperfect information"
@@ -29,6 +32,9 @@ export const AIalgos=()=>
           "Finds solutions in large, complex search spaces",
           "Handles non-linear, non-continuous optimization problems"
         ],
+
+        "link":"https://medium.com/@AnasBrital98/genetic-algorithm-explained-76dfbc5de85d",
+
         "disadvantages": [
           "No guarantee of finding the global optimum",
           "Requires tuning of parameters"
@@ -51,6 +57,10 @@ export const AIalgos=()=>
           "Adapts to dynamic and unknown environments",
           "Can learn optimal strategies through trial and error"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "May require a large number of interactions with the environment",
           "Exploration-exploitation trade-off"
@@ -77,6 +87,10 @@ export const AIalgos=()=>
           "Handles environments with unknown dynamics",
           "Converges to an optimal policy"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "May require a large number of training episodes",
           "Sensitive to hyperparameter tuning"
@@ -100,6 +114,10 @@ export const AIalgos=()=>
           "Effective for complex image recognition tasks",
           "Adaptable to a wide range of image datasets"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "Requires large amounts of labeled data for training",
           "Computationally expensive"
@@ -123,6 +141,10 @@ export const AIalgos=()=>
           "Captures contextual information in text",
           "Versatile for various NLP tasks"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "Computationally intensive during training",
           "Requires large pre-training datasets"
@@ -148,6 +170,10 @@ export const AIalgos=()=>
           "Easy to understand and implement",
           "Does not require training phase"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "Sensitive to irrelevant and redundant features",
           "Computational cost grows with the size of the dataset"
@@ -170,6 +196,10 @@ export const AIalgos=()=>
           "Simple and efficient for large datasets",
           "Versatile for various types of data"
         ],
+
+        "link":"https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/#:~:text=A%20minimax%20algorithm%20is%20a,best%20game%20move%20to%20make.",
+
+
         "disadvantages": [
           "Sensitive to the initial choice of centroids",
           "May converge to a local minimum"
