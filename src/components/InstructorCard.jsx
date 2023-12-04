@@ -11,8 +11,8 @@ const InstructorCard = () => {
                <h2 className='top-head'>Our Instructor</h2>
     <div class="instructor-card">
       <div class="imgBox">
-        <img src={sir2} alt="" />
         <img src={sir1} alt="" />
+        <img src={sir2} alt="" />
       </div>
       <div class="details">
         <div class="ins-content">

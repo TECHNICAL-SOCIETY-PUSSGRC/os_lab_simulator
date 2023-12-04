@@ -5,6 +5,9 @@ const Cell = ({ rowIndex, cellIndex, data, setData, animateOpacity, isRunning })
     if(cellIndex === 0) return 'Pid'
     else if(cellIndex === 1) return 'AT'
     else if(cellIndex === 2) return 'BT'
+    else if(cellIndex === 3) return 'CT'
+    else if(cellIndex === 4) return 'TAT'
+    else if(cellIndex === 5) return 'WT'
   }, [cellIndex])
   
   const handleChangeValue = (e) => {
