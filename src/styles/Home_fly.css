@@ -109,6 +109,9 @@ a {
 
 .center-circle {
 	position: absolute;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	width: 230px;
 	aspect-ratio: 1 / 1;
 	left: 50%;
@@ -117,6 +120,10 @@ a {
 	background: #FFFFFF;
 	box-shadow: 0px 18px 36px -18px rgba(12, 5, 46, 0.3), 0px 30px 60px -12px rgba(12, 5, 46, 0.25);
 	border-radius: 50%;
+}
+.center-circle-text{
+	font-size: 20px;
+	font-weight: 600;
 }
 .second-circle {
 	position: absolute;
@@ -165,15 +172,6 @@ a {
 	right: 0;
 	display: block;
 	background-image: linear-gradient(180deg, rgba(60, 26, 229, 0) 0%, #3C1AE5 50%, rgba(60, 26, 229, 0) 100%);
-}
-
-.center-circle div{
-    position: absolute;
-    top: 30%;
-    left: 30%;
-    font-size: larger;
-    text-align: center;
-    font-weight: 600;
 }
 
 .saste-desc{
