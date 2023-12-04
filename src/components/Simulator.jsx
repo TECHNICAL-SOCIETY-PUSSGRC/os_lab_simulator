@@ -1,21 +1,21 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { Table, ShinyButton } from '.'
 import AlgorithmsData from '../assets/DataFiles/AlgorithmsData'
-import { SampleData } from './data'
+import { SampleData, StepWiseFCFS, createCopyJSON } from './data'
 
 const Simulator = () => {
-  const columns1 = useMemo(() => [
+  const columnsBeforeRunning = useMemo(() => [
     { Header: 'Process ID (Pid)', accessor: 'Pid' },
     { Header: 'Arrival Time (AT)', accessor: 'AT'},
     { Header: 'Burst Time (BT)', accessor: 'BT' },
   ], [])
-  const columns2 = useMemo(() => [
+  const columnsWhileRunning = useMemo(() => [
     { Header: 'Process ID (Pid)', accessor: 'Pid' },
     { Header: 'Arrival Time (AT)', accessor: 'AT'},
     { Header: 'Burst Time (BT)', accessor: 'BT' },
     { Header: 'Completion Time (CT)', accessor: 'CT'},
     { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
-    { Header: 'Waiting Time (WT)', accessor: 'WT' }
+    { Header: 'Waiting Time (WT)', accessor: 'WT' },
   ], [])
 
   const algoOptionsRef = useRef(null)
@@ -33,9 +33,28 @@ const Simulator = () => {
   const [stack, setStack] = useState(['Pid'])
   const [cpu, setCPU] = useState({Pid: 'Pid', BT: 'BT'})
   const [currentTime, setCurrentTime] = useState(0)
+  const [isCPUFree, setIsCPUFree] = useState(false)
+  const [isQueueEmpty, setIsQueueEmpty] = useState(false)
+  const [isStackEmpty, setIsStackEmpty] = useState(false)
+  const [animateTime, setAnimateTime] = useState(false)
+  const [explanationMessage, setExplanationMessage] = useState([''])
+  const [animateMessage, setAnimateMessage] = useState(false)
+  const [steps, setSteps] = useState([])
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1) 
 
+  /* Helper Functions */
+  const handleAnimateOpacity = () => {
+    setAnimateOpacity(true)
+    const timeoutId = setTimeout(() => setAnimateOpacity(false), 500)
+    return () => clearTimeout(timeoutId);
+  }
+  const processExplanationMessage = (msg) => {
+    return msg.split("\n")
+  }
 
+  /* Functionalities Functions */
   const handleChangeAlgoClick = () => {
+    if(isRunning) return; // if simulation is running, then don't allow to change the algo
     setIsAlgoOpen(true);
   }
   const handleChangeAlgo = (e) => {
@@ -47,15 +66,10 @@ const Simulator = () => {
   }
   const handleFillSampleData = () => {
     const sampleData = SampleData()
+    setData(sampleData)
+    setNoOfProcesses(sampleData.length)
 
-    setAnimateOpacity(true)
-    const timeoutId = setTimeout(() => {
-      setData(sampleData)
-      setNoOfProcesses(sampleData.length)
-      setAnimateOpacity(false)
-    }, 500)
-
-    return () => clearTimeout(timeoutId);
+    handleAnimateOpacity()
   }
   const handleFillRandomData = () => {
     const newData = []
@@ -66,13 +80,9 @@ const Simulator = () => {
         BT: Math.floor(Math.random() * 10)
       })
     }
+    setData(newData)
 
-    setAnimateOpacity(true)
-    const timeoutId = setTimeout(() => {
-      setData(newData)
-      setAnimateOpacity(false)
-    }, 500);
-    return () => clearTimeout(timeoutId);
+    handleAnimateOpacity();
   }
   const handleAddProcess = () => {
     const newData = [...data]
@@ -88,9 +98,86 @@ const Simulator = () => {
     setData([])
     setNoOfProcesses(0)
     setIsRunning(false)
+    setCurrentTime(0)
+    setCPU({Pid: 'Pid', BT: 'BT'})
+    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setStack(['Pid'])
+    setExplanationMessage([''])
   }
   const handleRun = () => {
+    data.map((process, index) => {
+      if(process.Pid === '') process.Pid = 'P' + (index+1)
+      if(process.AT === '') process.AT = 0
+      if(process.BT === '') process.BT = 0
+    })
+
     setIsRunning(true)
+    setSteps(StepWiseFCFS(data, currentTime))
+    console.log(StepWiseFCFS(data, currentTime))
+    handleAnimateOpacity()
+  }
+  const handleNext = () => {
+    if(currentStepIndex === steps.length-1) return;
+
+    const newStepIndex = currentStepIndex + 1
+    setCurrentStepIndex(newStepIndex)
+    setExplanationMessage(processExplanationMessage(steps[newStepIndex].explanationMessage))
+
+    const timeoutId1 = setTimeout(() => {
+      setData(createCopyJSON(steps[newStepIndex].data))
+      handleAnimateOpacity()
+    }, 1500)
+    const timeoutId2 = setTimeout(() => setCurrentTime(steps[newStepIndex].currentTime), 2500)
+
+    return () => {
+      clearTimeout(timeoutId1)
+      clearTimeout(timeoutId2)
+    }
+  }
+  const handlePrev = () => {
+    if(currentStepIndex === -1) return;
+
+    const newStepIndex = currentStepIndex - 1
+    setCurrentStepIndex(newStepIndex)
+    
+    if(newStepIndex == -1){
+      setExplanationMessage([''])
+      setCurrentTime(0)
+      handleFillSampleData()
+      return;
+    }
+
+    setExplanationMessage(processExplanationMessage(steps[newStepIndex].explanationMessage))
+
+    const timeoutId1 = setTimeout(() => {
+      setData(createCopyJSON(steps[newStepIndex].data))
+      handleAnimateOpacity()
+    }, 1500)
+    const timeoutId2 = setTimeout(() => setCurrentTime(steps[newStepIndex].currentTime), 2500)
+
+    return () => {
+      clearTimeout(timeoutId1)
+      clearTimeout(timeoutId2)
+    }
+  }
+  const handleShowFinalResult = () => {
+    setCPU({})
+    setQueue([])
+    setStack(data.map(process => process.Pid))
+    setCurrentStepIndex(steps.length-1)
+    setData(steps[steps.length-1].data)
+    handleAnimateOpacity()
+    setCurrentTime(steps[steps.length-1].currentTime)
+  }
+  const handleRestart = () => {
+    setCPU({Pid: 'Pid', BT: 'BT'})
+    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setStack(['Pid'])
+    setCurrentStepIndex(0)
+    setExplanationMessage([''])
+    setData(steps[0].data)
+    handleAnimateOpacity()
+    setCurrentTime(steps[0].currentTime)
   }
 
   useEffect(() => {
@@ -111,11 +198,44 @@ const Simulator = () => {
     return () => clearTimeout(timeoutId);
   }, [noOfProcesses]);
 
+  useEffect(() => {
+    setIsCPUFree(true)
+    const timeoutId = setTimeout(() => setIsCPUFree(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [cpu])
+
+  useEffect(() => {
+    setIsQueueEmpty(true)
+    const timeoutId = setTimeout(() => setIsQueueEmpty(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [queue])
+
+  useEffect(() => {
+    setIsStackEmpty(true)
+    const timeoutId = setTimeout(() => setIsStackEmpty(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [stack])
+
+  useEffect(() => {
+    setAnimateTime(true)
+    const timeoutId = setTimeout(() => setAnimateTime(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [currentTime])
+
+  useEffect(() => {
+    setAnimateMessage(true)
+    const timeoutId = setTimeout(() => setAnimateMessage(false), 500)
+    return () => clearTimeout(timeoutId)
+  }, [explanationMessage])
+
+  // useEffect(() => console.log(data), [data])
+
 
   return (
     <div className="text-white text-center">
       <h1 className="text-4xl">CPU Scheduling Simulator</h1>
 
+      {/* AlgoSelect Section */}
       <div className="mt-3 flex flex-row justify-center gap-5">
         <h1 className="text-2xl">Algo: </h1>
 
@@ -140,39 +260,49 @@ const Simulator = () => {
         </div>
       </div>
 
-      {isRunning && <div className="mt-10 mx-10 flex flex-row text-2xl">
+      {isRunning && <div className="mt-10 mx-10 flex flex-row text-2xl gap-24 items-center">
+        {/* Current Time */}
         <div className="flex flex-row py-3 px-5 gap-4">
           <div className="flex flex-col group">
             <span> Current Time: </span>
-            <div className="h-[2px] bg-white transition-all duration-1000 ease-in-out animate-line" />
+            <div className={`h-[2px] bg-white transition-all duration-1000 ease-in-out ${animateTime && 'animate-line'}`} />
           </div>
           <span> {currentTime} </span>
         </div>
-
-        <div className="flex flex-grow-[1] justify-center items-center">
-        <p className="border-b-2"></p> 
+        
+        {/* Explanation Section */}
+        <div className="flex justify-center items-center w-[800px] overflow-hidden">
+          <div className={`px-6 py-6 transition-opacity duration-500 ease-in-out ${animateMessage? 'opacity-0 border-0': 'opacity-100 border'}`}>         
+            {explanationMessage.map((msg, index) => <p key={index}> {msg} </p>)}
+          </div>
         </div>
       </div>}
 
       <div className="w-full flex flex-row pl-5 pt-10 gap-16">
         {isRunning?
           <div className="flex flex-col gap-10">
-            <div className="w-[200px] h-[120px] border flex flex-col px-5">
+            {/* CPU Section */}
+            <div className={`w-[200px] ${cpu.Pid? 'h-[120px]': 'h-[75px]'} border flex flex-col px-5 ${isCPUFree? 'max-h-[70px]': 'max-h-[120px]'} transition-all duration-1000 ease-in-out`}>
               <h2 className="text-2xl border-b-2 py-2">CPU</h2>
-              <div className="flex flex-row items-center justify-evenly h-full text-xl">
-                <span> {cpu.Pid} </span>
-                <span> : </span>
-                <span> {cpu.BT} </span>
-              </div>
+
+              {
+                cpu.Pid && <div className={`flex flex-row items-center justify-evenly h-full text-xl
+                transition-opacity duration-1000 ease-in-out ${isCPUFree? 'opacity-0': 'opacity-100'}`}>
+                  <span> {cpu.Pid} </span>
+                  <span> : </span>
+                  <span> {cpu.BT} </span>
+                </div>
+              }
             </div>
 
-            <div className="h-fit border flex flex-col px-3">
+            {/* Queue Section */}
+            <div className={`h-fit border flex flex-col px-3 max-h-[${isQueueEmpty? '70px': 'auto'}] transition-all duration-1000 ease-in-out`}>
               <h2 className="text-2xl border-b-2 py-2 uppercase tracking-wide">Queue</h2>
               <div className="flex flex-col py-3 gap-3 text-xl">
                 {
                   queue.map(({ Pid, AT}, index) => {
                     return (
-                      <div key={index} className="flex flex-row items-center justify-evenly text-xl">
+                      <div key={index} className={`flex flex-row items-center justify-evenly text-xl transition-opacity duration-1000 ease-in-out ${isQueueEmpty? 'opacity-0': 'opacity-100'}`}>
                         <span> {Pid} </span>
                         <span> : </span>
                         <span> {AT} </span>
@@ -184,6 +314,7 @@ const Simulator = () => {
             </div>
           </div>
         :  
+          /* Simulator Sidebar Before Running */
           <div className="flex flex-col gap-5 my-auto border p-5 justify-center items-center text-left text-2xl">
             <div className="relative group overflow-hidden">
               Total No. of Processes: {noOfProcesses}
@@ -224,25 +355,33 @@ const Simulator = () => {
         }
 
         <div className="flex flex-col flex-grow-[1] gap-10">
+          {/* Table */}
           <Table 
             data={data} 
             setData={setData} 
             setNoOfProcesses={setNoOfProcesses} 
             animateOpacity={animateOpacity} 
             isRunning={isRunning}
-            columns={isRunning? columns2: columns1}
+            columns={isRunning? columnsWhileRunning: columnsBeforeRunning}
           />
 
+          {/* Simulation Buttons Section While Running */}
           {isRunning && <div className="flex flex-row justify-between w-[800px] mx-auto">
             <div className="flex flex-row gap-5">
               <ShinyButton 
                 className="text-xl border px-3 py-2"
                 text="Show Final Result"
+                onClick={handleShowFinalResult}
               />
               <ShinyButton 
                 className="text-xl border px-3 py-2"
                 text="Reset"
                 onClick={handleReset}
+              />
+              <ShinyButton 
+                className="text-xl border px-3 py-2"
+                text="Restart"
+                onClick={handleRestart}
               />
             </div>
 
@@ -250,18 +389,21 @@ const Simulator = () => {
               <ShinyButton 
                 className="text-xl border px-3 py-2"
                 text="Prev"
+                onClick={handlePrev}
               />
               <ShinyButton 
                 className="text-xl border px-3 py-2"
                 text="Next"
+                onClick={handleNext}
               />
             </div>
           </div>}
         </div>
-
-        {isRunning && <div className="mr-5 w-[200px] h-fit border flex flex-col px-3">
+        
+        {/* Completed Stack Section */}
+        {isRunning && <div className={`mr-5 w-[200px] h-fit border flex flex-col px-3 max-h-[${isStackEmpty? '70px': '500px'}] transition-all duration-1000 ease-in-out`}>
           <h2 className="text-2xl border-b-2 py-2 uppercase tracking-wide">Completed</h2>
-          <div className="flex flex-col py-3 gap-3 text-xl">
+          <div className={`flex flex-col py-3 gap-3 text-xl transition-opacity duration-1000 ease-in-out ${isStackEmpty? 'opacity-0': 'opacity-100'}`}>
             {
               stack.map((Pid, index) => <span key={index}> {Pid} </span>)
             }
@@ -302,6 +444,7 @@ const Simulator = () => {
           </div>
         </div>
       : 
+        /* Simulator Buttons Section Before Running */
         <div className="flex flex-row gap-5 justify-end mt-16 pr-10">
           <ShinyButton 
             className="text-xl border px-3 py-2"
