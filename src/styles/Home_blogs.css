@@ -4,7 +4,7 @@
     width: 80%;
     /* border: 2px solid rebeccapurple; */
     margin: auto;
-    padding-top: 50px;
+    padding-top: 100px;
     text-align: center;
 }
 
@@ -17,12 +17,13 @@
     font-weight: 700;
     font-size: larger;
     color: rgb(136, 136, 135);
-    margin-bottom: 2rem;
+    margin-bottom: 5rem;
 }
 
 .blog_container{
-    margin-top: 2rem;
-    /* border: 2px solid red; */
+    /* margin-top: 2rem;
+    padding-top: 100px;
+    border: 2px solid red; */
    
 
    
@@ -69,6 +70,9 @@
   -moz-transform: scale(1.1);
   -ms-transform: scale(1.1);
   -o-transform: scale(1.1);
+
+ 
+
 }
 .grid > article img {
   width: 100%;

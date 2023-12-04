@@ -4,6 +4,8 @@ import '../styles/About.css'
 import ashishImg from '../assets/teamImage/ashishImg.png'
 import kavyaImg from '../assets/teamImage/kavyaImg.png'
 import socialImg from '../assets/teamImage/Social.png'
+import InstructorCard from '../components/InstructorCard'
+import Footer from '../components/Footer'
 
 
 const About = () => {
@@ -11,10 +13,11 @@ const About = () => {
     <div className='about-us-page'>
       <div className='title-section'>
         <Nav />
-        <h1 className='title'>About Us</h1>
+        <h1 className='title'></h1>
       </div>
 
-      <div className='our-team-container'>
+     <div className="parent-div">
+     <div className='our-team-container'>
         <h1 style={{ color: '#444' }}>Our Team</h1>
 
         <div className='team'>
@@ -22,6 +25,11 @@ const About = () => {
           <TeamCard name="Kavya Gupta" id='2' image={kavyaImg}  social={socialImg} />
         </div>
       </div>
+      <div className="out-instructor-container">
+       <InstructorCard/>
+      </div>
+      <Footer/>
+     </div>
     </div>
   )
 }

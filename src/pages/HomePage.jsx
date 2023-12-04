@@ -1,4 +1,5 @@
 import { Nav, Home_intro, Home_content, Home_blogs, Home_fly } from '../components'
+import Footer from '../components/Footer'
 import '../styles/Home.css'
  
 const Home = () => {
@@ -12,6 +13,7 @@ const Home = () => {
       <Home_content/>
       <Home_blogs/>
       <Home_fly/>
+      
    </>
   )
 }

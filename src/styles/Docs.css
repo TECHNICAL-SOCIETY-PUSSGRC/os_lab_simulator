@@ -1,0 +1,187 @@
+.doc-nav-section{
+    
+        height: 34vh;
+        background-image: linear-gradient(rgba(4,9,30,0.7),rgba(4,9,30,0.7)),url('../assets/bg1.jpeg');
+        background-position: center;
+        background-size: cover;
+        color: #fff;
+        text-align: center;
+        position: static;
+  
+}
+
+.doc-cluster h2{
+    color: yellow;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.doc-btn-container{
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.dac-page-tab{
+    background: #f03e3e;
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: 10px;    ;
+    -webkit-border-radius: 10px    ;
+    -moz-border-radius: 10px    ;
+    -ms-border-radius: 10px    ;
+    -o-border-radius: 10px    ;
+}
+
+/* .dac-page-tab:hover{
+    background: #f50606;
+} */
+
+.active{
+   background: rgb(48, 48, 236);
+   
+}
+
+
+
+.doc-container{
+    /* border: 2px solid black; */
+    height: auto;
+    padding:30px 20px 20px 20px ;
+    text-align: center;
+    background-color: rgb(225, 231, 231);
+    border-radius: 20px;
+    width: 80%;
+    margin-left:auto;
+    margin-right: auto;
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+
+.doc-nav-section h1{
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.doc-container h1{
+    font-size: 36px;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+.doc-container p{
+    margin-left: 5px;
+    text-align: left;
+    margin-top: 15px;
+    font-size: medium;
+    font-weight: 500;
+    color: rgb(104, 105, 105);
+    padding-bottom: 50px;
+    line-height : 30px;
+}
+
+.doc-container li{
+    text-align: left;
+    line-height: normal;
+    margin-left: 15px;
+   
+}
+
+.light-heading{
+    font-weight: 600;
+    font-size: larger;
+    color: black;
+}
+
+.special li{
+    line-height: 25px;
+    padding-top: 20px;
+}
+
+.doc-container blod{
+    /* font-weight: 900; */
+}
+
+.doc-container:hover{
+    box-shadow: 0 0 20px 0px rgba(13, 14, 13, 0.644);
+    transition: 0.5s;
+}
+
+.lighter-heading{
+    font-weight: 600;
+    font-size: larger;
+    color: black;
+}
+
+.algo-type p {
+    text-align: center;
+}
+
+.algo-names{
+    margin-top: -20px;
+    font-size: larger;
+    font-weight: 600;
+}
+
+h4>li{
+    font-size: larger;
+    font-weight: 500;
+}
+
+
+/* css for standard docs */
+.std-container{
+    height: auto;
+    padding:30px 20px 20px 20px ;
+    text-align: center;
+    background-color: rgb(225, 231, 231);
+    border-radius: 20px;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left:auto;
+    margin-right: auto;
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+
+.std-container h1{
+    font-size: 36px;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+.first-para{
+    margin-left: 5px;
+    text-align: left;
+   
+    font-size: medium;
+    font-weight: 500;
+    color: rgb(104, 105, 105);
+    margin-bottom: -1rem;
+    line-height : 30px;
+}
+
+.std-container h4{
+    margin-top: 1.5rem;
+    text-align: start;
+    font-size: larger;
+    font-weight: 600;
+    
+}
+
+.dis-para,.adv-para,.gen-para{
+    text-align: left;
+    
+    font-size: medium;
+    font-weight: 500;
+    color: rgb(104, 105, 105);
+
+}
+.doc-content-detail{
+    margin-left: 3rem;
+}
+

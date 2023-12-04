@@ -8,7 +8,7 @@ import blog6 from '../assets/blog6.jpg'
 
 const Home_blogs = () => {
   return (
-    <div className='blogs  .blog_container'>
+    <div className='blogs  blog_container'>
       <h1>Operating Systems Blogs </h1>
       <p>Reading blogs are efficient way to learn </p>
      
