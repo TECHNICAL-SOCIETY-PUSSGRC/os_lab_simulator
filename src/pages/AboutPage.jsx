@@ -19,14 +19,13 @@ const About = () => {
      <div className="parent-div">
      <div className='our-team-container'>
         <h1 style={{ color: '#444' }}>Our Team</h1>
-
         <div className='team'>
           <TeamCard name="Ashish Singh" id='1' image = {ashishImg} social={socialImg} />
           <TeamCard name="Kavya Gupta" id='2' image={kavyaImg}  social={socialImg} />
         </div>
       </div>
       <div className="out-instructor-container">
-       <InstructorCard/>
+        <InstructorCard/>
       </div>
       <Footer/>
      </div>

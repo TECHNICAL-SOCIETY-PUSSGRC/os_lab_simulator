@@ -15,7 +15,7 @@ const DefaultDocPage = () => {
 
         <div className="doc-container">
         <h1>Why CPU Scheduling?</h1>
-        <p>A typical process involves both I/O time and CPU time. In a uni programming system like MS-DOS, time spent
+        <div>A typical process involves both I/O time and CPU time. In a uni programming system like MS-DOS, time spent
             waiting for I/O is wasted and CPU is free during this time. In multi programming systems, one process can
             use CPU while another is waiting for I/O. This is possible only with process scheduling.<br/><br/>
             <h2 className="light-heading" >Objectives of Process Scheduling Algorithm</h2>
@@ -26,7 +26,7 @@ const DefaultDocPage = () => {
             <li>Min waiting time [Time a process waits in ready queue]</li>
             <li>Min response time [Time when a process produces first response]</li>
 
-        </p>
+        </div>
         </div>
             
         <div className="doc-container">

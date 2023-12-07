@@ -13,24 +13,20 @@
 import '../styles/Docs.css'
 import { Nav, Simulator } from '../components'
 import { useState } from 'react'
-
 import DefaultDocPage from '../components/DefaultDocPage'
 
 
-
 const DocsPage = () => {
-
     const [defaultdoc,setDefaultDoc] = useState(1)
     const [active,setActive] = useState(true) 
-const [docs,setDocs]= useState(searchingAlgo);
-console.log([docs])
+    const [docs,setDocs]= useState(searchingAlgo);
 
-const [activeButton, setActiveButton] = useState('button1');
+    const [activeButton, setActiveButton] = useState('button1');
 
-  const handleButtonClick = (buttonName) => {
-    setActiveButton(buttonName);
-    // Perform any other actions you want when a button is clicked
-  };
+    const handleButtonClick = (buttonName) => {
+        setActiveButton(buttonName);
+        // Perform any other actions you want when a button is clicked
+};
 
 
   return (

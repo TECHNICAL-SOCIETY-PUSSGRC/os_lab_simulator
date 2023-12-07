@@ -9,19 +9,26 @@ const Cell = ({ rowIndex, cellIndex, data, setData, animateOpacity, isRunning })
     else if(cellIndex === 4) return 'TAT'
     else if(cellIndex === 5) return 'WT'
   }, [cellIndex])
-  
+
   const handleChangeValue = (e) => {
     const newData = [...data]
     newData[rowIndex][curCell] = e.target.value
     setData(newData)
   }
 
+
   return (
-    <td className={`border-solid border py-3 transition-opacity duration-500 ease-in-out ${animateOpacity? 'opacity-0': 'opacity-100'}`}>
+    <td 
+      className={`py-3 transition-opacity duration-500 ease-in-out  ${animateOpacity? 'opacity-0': 'opacity-100'}`}
+      style={{ 
+        backgroundColor: isRunning? data[rowIndex]['bgColor'][curCell]: 'transparent',
+        border: (isRunning && data[rowIndex]['bgColor'][curCell] === '#008F5A')? '3px solid': '1px solid'
+      }}
+    >
       <input
         type="text"
         name="cellValue"
-        value={data[rowIndex][curCell]}
+        value={data[rowIndex][curCell] !== null? data[rowIndex][curCell]: ''}
         onChange={handleChangeValue}
         placeholder={isRunning? "-": "0"}
         className='bg-transparent w-full text-center focus:outline-none'

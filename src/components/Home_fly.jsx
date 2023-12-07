@@ -27,9 +27,6 @@ const Home_fly = () => {
   //   setCurAlgos(algoname)
   // }
 
-  console.log(ptext);
-
-  useEffect(() => console.log([curAlgos]));
   return (
     <div className="home-fly-main">
       <div className="void" id="void">
