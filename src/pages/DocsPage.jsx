@@ -79,7 +79,7 @@ const DocsPage = () => {
         </div>
       </div>
       { defaultdoc===1?
-        <DefaultDocPage/>: docs.map(({name,description,advantages,disadvantages,timeComplexity,spaceComplexity,applications})=>{
+        <DefaultDocPage/>: docs.map(({link,name,description,advantages,disadvantages,timeComplexity,spaceComplexity,applications})=>{
         return <div className="std-container" id="fcfs">
         <h1>{name}</h1>
         <p className='first-para'>{description}</p>
@@ -129,7 +129,7 @@ const DocsPage = () => {
 
             </div>
 
-            <button>Read More</button>
+            <button ><a href={link} target='_blank'>Read More</a></button>
        
         </div>
 
