@@ -40,7 +40,10 @@ const Simulator = () => {
   const [explanationMessage, setExplanationMessage] = useState([''])
   const [animateMessage, setAnimateMessage] = useState(false)
   const [steps, setSteps] = useState([])
-  const [currentStepIndex, setCurrentStepIndex] = useState(-1) 
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1)
+  const [avgWT, setAvgWT] = useState(0.0)
+  const [avgTAT, setAvgTAT] = useState(0.0)
+  const [animateAvgWT, setAnimateAvgWT] = useState(false)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -50,6 +53,16 @@ const Simulator = () => {
   }
   const processExplanationMessage = (msg) => {
     return msg.split("\n")
+  }
+  const calculateAvgWTandTAT = () => {
+    let sumWT = 0.0, sumTAT = 0.0
+    data.map((process) => {
+      sumWT += process.WT
+      sumTAT += process.TAT
+    })
+
+    setAvgWT((sumWT / noOfProcesses).toFixed(2))
+    setAvgTAT((sumTAT / noOfProcesses).toFixed(2))
   }
 
   /* Functionalities Functions */
@@ -103,6 +116,8 @@ const Simulator = () => {
     setQueue([{ Pid: 'Pid', AT: 'AT'}])
     setStack(['Pid'])
     setExplanationMessage([''])
+    setAvgTAT(0.0)
+    setAvgWT(0.0)
   }
   const handleRun = () => {
     data.map((process, index) => {
@@ -238,6 +253,21 @@ const Simulator = () => {
     const timeoutId = setTimeout(() => setAnimateMessage(false), 500)
     return () => clearTimeout(timeoutId)
   }, [explanationMessage])
+
+  useEffect(() => {
+    if(isRunning && currentStepIndex === steps.length-1){
+      calculateAvgWTandTAT()
+    }else if(avgWT || avgTAT){
+      setAvgWT(0.0)
+      setAvgTAT(0.0)
+    }
+  }, [currentStepIndex])
+
+  useEffect(() => {
+    setAnimateAvgWT(true)
+    const timeoutId = setTimeout(() => setAnimateAvgWT(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [avgTAT, avgWT])
 
   // useEffect(() => console.log("data: ", data), [data])
 
@@ -375,40 +405,55 @@ const Simulator = () => {
             isRunning={isRunning}
             columns={isRunning? columnsWhileRunning: columnsBeforeRunning}
           />
+          
+          {isRunning && <>
+            {/* Simulation Buttons Section While Running */}
+            <div className="flex flex-row justify-between w-[800px] mx-auto">
+              <div className="flex flex-row gap-5">
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Show Final Result"
+                  onClick={handleShowFinalResult}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Reset"
+                  onClick={handleReset}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Restart"
+                  onClick={handleRestart}
+                />
+              </div>
 
-          {/* Simulation Buttons Section While Running */}
-          {isRunning && <div className="flex flex-row justify-between w-[800px] mx-auto">
-            <div className="flex flex-row gap-5">
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Show Final Result"
-                onClick={handleShowFinalResult}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Reset"
-                onClick={handleReset}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Restart"
-                onClick={handleRestart}
-              />
+              <div className="flex flex-row gap-5">
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Prev"
+                  onClick={handlePrev}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Next"
+                  onClick={handleNext}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-row gap-5">
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Prev"
-                onClick={handlePrev}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Next"
-                onClick={handleNext}
-              />
-            </div>
-          </div>}
+            {/* Avg WT and TAT section */}
+            {Boolean(avgTAT) && <div className={`flex flex-col gap-5 w-[800px] mx-auto items-start text-xl transition-opacity ease-in-out duration-1000 ${animateAvgWT? 'opacity-0': 'opacity-100'}`}>
+              <div>
+                <span className="border-b-2">Average Waiting Time:</span>
+                <span> &nbsp;{avgWT} </span>
+              </div>
+
+              <div>
+                <span className="border-b-2">Average Turn Around Time:</span>
+                <span> &nbsp;{avgTAT} </span>
+              </div>
+            </div>}
+          </>}
         </div>
         
         {/* Completed Stack Section */}
