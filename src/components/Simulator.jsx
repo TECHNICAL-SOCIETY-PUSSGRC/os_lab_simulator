@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { Table, ShinyButton } from '.'
 import AlgorithmsData from '../assets/DataFiles/AlgorithmsData'
-import { SampleData, StepWiseFCFS, createCopyJSON } from './data'
+import { SampleData, StepWiseFCFS } from './data'
 
 const Simulator = () => {
   const columnsBeforeRunning = useMemo(() => [
@@ -31,7 +31,7 @@ const Simulator = () => {
   const [animateOpacity, setAnimateOpacity] = useState(false)
   const [queue, setQueue] = useState([{ Pid: 'Pid', AT: 'AT'}])
   const [stack, setStack] = useState(['Pid'])
-  const [cpu, setCPU] = useState({Pid: 'Pid', BT: 'BT'})
+  const [cpu, setCPU] = useState({Pid: 'Pid', RT: 'RT'})
   const [currentTime, setCurrentTime] = useState(0)
   const [isCPUFree, setIsCPUFree] = useState(false)
   const [isQueueEmpty, setIsQueueEmpty] = useState(false)
@@ -40,7 +40,10 @@ const Simulator = () => {
   const [explanationMessage, setExplanationMessage] = useState([''])
   const [animateMessage, setAnimateMessage] = useState(false)
   const [steps, setSteps] = useState([])
-  const [currentStepIndex, setCurrentStepIndex] = useState(-1) 
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1)
+  const [avgWT, setAvgWT] = useState(0.0)
+  const [avgTAT, setAvgTAT] = useState(0.0)
+  const [animateAvgWT, setAnimateAvgWT] = useState(false)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -50,6 +53,16 @@ const Simulator = () => {
   }
   const processExplanationMessage = (msg) => {
     return msg.split("\n")
+  }
+  const calculateAvgWTandTAT = () => {
+    let sumWT = 0.0, sumTAT = 0.0
+    data.map((process) => {
+      sumWT += process.WT
+      sumTAT += process.TAT
+    })
+
+    setAvgWT((sumWT / noOfProcesses).toFixed(2))
+    setAvgTAT((sumTAT / noOfProcesses).toFixed(2))
   }
 
   /* Functionalities Functions */
@@ -99,21 +112,29 @@ const Simulator = () => {
     setNoOfProcesses(0)
     setIsRunning(false)
     setCurrentTime(0)
-    setCPU({Pid: 'Pid', BT: 'BT'})
+    setCPU({Pid: 'Pid', RT: 'RT'})
     setQueue([{ Pid: 'Pid', AT: 'AT'}])
     setStack(['Pid'])
     setExplanationMessage([''])
+    setAvgTAT(0.0)
+    setAvgWT(0.0)
   }
   const handleRun = () => {
     data.map((process, index) => {
       if(process.Pid === '') process.Pid = 'P' + (index+1)
-      if(process.AT === '') process.AT = 0
-      if(process.BT === '') process.BT = 0
+      process.AT = (process.AT === '')? 0: parseInt(process.AT)
+      process.BT = (process.BT === '')? 0: parseInt(process.BT)
+
+      // filling empty data
+      process.CT = process.TAT = process.WT = null 
+      process.bgColor = {
+        Pid: 'transparent', AT: 'transparent', BT: 'transparent', CT: 'transparent', TAT: 'transparent', WT: 'transparent'
+      }
     })
 
     setIsRunning(true)
-    setSteps(StepWiseFCFS(data, currentTime))
-    console.log(StepWiseFCFS(data, currentTime))
+    setSteps(StepWiseFCFS(data))
+    console.log(StepWiseFCFS(data))
     handleAnimateOpacity()
   }
   const handleNext = () => {
@@ -121,18 +142,16 @@ const Simulator = () => {
 
     const newStepIndex = currentStepIndex + 1
     setCurrentStepIndex(newStepIndex)
-    setExplanationMessage(processExplanationMessage(steps[newStepIndex].explanationMessage))
 
-    const timeoutId1 = setTimeout(() => {
-      setData(createCopyJSON(steps[newStepIndex].data))
-      handleAnimateOpacity()
-    }, 1500)
-    const timeoutId2 = setTimeout(() => setCurrentTime(steps[newStepIndex].currentTime), 2500)
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg } = steps[newStepIndex]
+    setExplanationMessage(processExplanationMessage(msg))
 
-    return () => {
-      clearTimeout(timeoutId1)
-      clearTimeout(timeoutId2)
-    }
+    if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
+    if(JSON.stringify(queue) !== JSON.stringify(newQueue)) setQueue(newQueue)
+    if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
+
+    setCurrentTime(curTime)
+    if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
   }
   const handlePrev = () => {
     if(currentStepIndex === -1) return;
@@ -143,41 +162,48 @@ const Simulator = () => {
     if(newStepIndex == -1){
       setExplanationMessage([''])
       setCurrentTime(0)
-      handleFillSampleData()
+      setCPU({ Pid: 'Pid', RT: 'RT'})
+      setQueue([{ Pid: 'Pid', AT: 'AT'}])
+      setStack(['Pid'])
       return;
     }
 
-    setExplanationMessage(processExplanationMessage(steps[newStepIndex].explanationMessage))
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg } = steps[newStepIndex]
+    setExplanationMessage(processExplanationMessage(msg))
 
-    const timeoutId1 = setTimeout(() => {
-      setData(createCopyJSON(steps[newStepIndex].data))
-      handleAnimateOpacity()
-    }, 1500)
-    const timeoutId2 = setTimeout(() => setCurrentTime(steps[newStepIndex].currentTime), 2500)
+    if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
+    if(JSON.stringify(queue) !== JSON.stringify(newQueue)) setQueue(newQueue)
+    if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
 
-    return () => {
-      clearTimeout(timeoutId1)
-      clearTimeout(timeoutId2)
-    }
+    setCurrentTime(curTime)
+    if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
   }
   const handleShowFinalResult = () => {
-    setCPU({})
-    setQueue([])
-    setStack(data.map(process => process.Pid))
-    setCurrentStepIndex(steps.length-1)
-    setData(steps[steps.length-1].data)
+    const newStepIndex = steps.length-1
+    setCurrentStepIndex(newStepIndex)
+
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg } = steps[newStepIndex]
+    setExplanationMessage(processExplanationMessage(msg))
+
+    if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
+    if(JSON.stringify(queue) !== JSON.stringify(newQueue)) setQueue(newQueue)
+    if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
+
+    setCurrentTime(curTime)
+
+    if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     handleAnimateOpacity()
-    setCurrentTime(steps[steps.length-1].currentTime)
   }
   const handleRestart = () => {
-    setCPU({Pid: 'Pid', BT: 'BT'})
+    setCurrentStepIndex(-1)
+    setExplanationMessage([''])
+    setCurrentTime(0)
+    setCPU({ Pid: 'Pid', RT: 'RT'})
     setQueue([{ Pid: 'Pid', AT: 'AT'}])
     setStack(['Pid'])
-    setCurrentStepIndex(0)
-    setExplanationMessage([''])
-    setData(steps[0].data)
-    handleAnimateOpacity()
-    setCurrentTime(steps[0].currentTime)
+
+    const { data: newData } = steps[0]
+    if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
   }
 
   useEffect(() => {
@@ -228,7 +254,22 @@ const Simulator = () => {
     return () => clearTimeout(timeoutId)
   }, [explanationMessage])
 
-  // useEffect(() => console.log(data), [data])
+  useEffect(() => {
+    if(isRunning && currentStepIndex === steps.length-1){
+      calculateAvgWTandTAT()
+    }else if(avgWT || avgTAT){
+      setAvgWT(0.0)
+      setAvgTAT(0.0)
+    }
+  }, [currentStepIndex])
+
+  useEffect(() => {
+    setAnimateAvgWT(true)
+    const timeoutId = setTimeout(() => setAnimateAvgWT(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [avgTAT, avgWT])
+
+  // useEffect(() => console.log("data: ", data), [data])
 
 
   return (
@@ -271,7 +312,7 @@ const Simulator = () => {
         </div>
         
         {/* Explanation Section */}
-        <div className="flex justify-center items-center w-[800px] overflow-hidden">
+        <div className="flex justify-center items-center w-[800px] overflow-hidden text-xl tracking-widest">
           <div className={`px-6 py-6 transition-opacity duration-500 ease-in-out ${animateMessage? 'opacity-0 border-0': 'opacity-100 border'}`}>         
             {explanationMessage.map((msg, index) => <p key={index}> {msg} </p>)}
           </div>
@@ -290,13 +331,13 @@ const Simulator = () => {
                 transition-opacity duration-1000 ease-in-out ${isCPUFree? 'opacity-0': 'opacity-100'}`}>
                   <span> {cpu.Pid} </span>
                   <span> : </span>
-                  <span> {cpu.BT} </span>
+                  <span> {cpu.RT} </span>
                 </div>
               }
             </div>
 
             {/* Queue Section */}
-            <div className={`h-fit border flex flex-col px-3 max-h-[${isQueueEmpty? '70px': 'auto'}] transition-all duration-1000 ease-in-out`}>
+            <div className={`h-fit border flex flex-col px-3 max-h-[${isQueueEmpty? '70px': '500px'}] transition-all duration-1000 ease-in-out`}>
               <h2 className="text-2xl border-b-2 py-2 uppercase tracking-wide">Queue</h2>
               <div className="flex flex-col py-3 gap-3 text-xl">
                 {
@@ -364,40 +405,55 @@ const Simulator = () => {
             isRunning={isRunning}
             columns={isRunning? columnsWhileRunning: columnsBeforeRunning}
           />
+          
+          {isRunning && <>
+            {/* Simulation Buttons Section While Running */}
+            <div className="flex flex-row justify-between w-[800px] mx-auto">
+              <div className="flex flex-row gap-5">
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Show Final Result"
+                  onClick={handleShowFinalResult}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Reset"
+                  onClick={handleReset}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Restart"
+                  onClick={handleRestart}
+                />
+              </div>
 
-          {/* Simulation Buttons Section While Running */}
-          {isRunning && <div className="flex flex-row justify-between w-[800px] mx-auto">
-            <div className="flex flex-row gap-5">
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Show Final Result"
-                onClick={handleShowFinalResult}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Reset"
-                onClick={handleReset}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Restart"
-                onClick={handleRestart}
-              />
+              <div className="flex flex-row gap-5">
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Prev"
+                  onClick={handlePrev}
+                />
+                <ShinyButton 
+                  className="text-xl border px-3 py-2"
+                  text="Next"
+                  onClick={handleNext}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-row gap-5">
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Prev"
-                onClick={handlePrev}
-              />
-              <ShinyButton 
-                className="text-xl border px-3 py-2"
-                text="Next"
-                onClick={handleNext}
-              />
-            </div>
-          </div>}
+            {/* Avg WT and TAT section */}
+            {Boolean(avgTAT) && <div className={`flex flex-col gap-5 w-[800px] mx-auto items-start text-xl transition-opacity ease-in-out duration-1000 ${animateAvgWT? 'opacity-0': 'opacity-100'}`}>
+              <div>
+                <span className="border-b-2">Average Waiting Time:</span>
+                <span> &nbsp;{avgWT} </span>
+              </div>
+
+              <div>
+                <span className="border-b-2">Average Turn Around Time:</span>
+                <span> &nbsp;{avgTAT} </span>
+              </div>
+            </div>}
+          </>}
         </div>
         
         {/* Completed Stack Section */}

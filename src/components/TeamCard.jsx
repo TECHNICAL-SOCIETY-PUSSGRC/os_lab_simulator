@@ -10,32 +10,30 @@ import { MdEmail } from "react-icons/md";
 
 
 const TeamCard = ({ name,image,social,id}) => {
-  console.log("id is: ",id)
   return (
     <>
     <div className='big-box'>
       {
-        id ==1? <div class="maincontainer maincontainer-1">
-        <div class="back">
+        id ==1? <div className="maincontainer maincontainer-1">
+        <div className="back">
             <h2>About Me & Project</h2>
             <p> Myself Ashish Singh , student of Computer Science & Engineering Panjab University SSGRC Hoshiarpur. <br />Currently studying in 3rd year. <br />I have developed this project to  understand the complex algorithms of our syllabus in a easy way. </p>
-             
         </div>
-        <div class="front front-1">
-            <div class="image">
+        <div className="front front-1">
+            <div className="image">
             <img src={image} alt='ashish singh'/>
             <h2>{name}</h2>
             </div>
         </div>
-    </div> :  <div class="maincontainer maincontainer-2">
-            <div class="back">
+    </div> :  <div className="maincontainer maincontainer-2">
+            <div className="back">
                 <h2>About Me & Project</h2>
                 <p>Hey Everyone ! This is Kavya Gupta, a third-year BE CSE student at Panjab University SSG Regional Center.
                   Purpose of developing this project is to sharp my Full Stack Skills and help our juniors to understand easily the world of Algorithms.
                 </p>
             </div>
-            <div class="front front-2">
-                <div class="image">
+            <div className="front front-2">
+                <div className="image">
                 <img src={image} alt='Kavya Gupta'/>
                 <h2>{name}</h2>
                 </div>
@@ -49,14 +47,14 @@ const TeamCard = ({ name,image,social,id}) => {
 
 
         {
-          id ==1?<div class={`container container-1`}>
-          <div class="card">
-              <div class="face bg-face face1">
+          id ==1?<div className={`container container-1`}>
+          <div className="card">
+              <div className="face bg-face face1">
                   
                       <h1>Lets Get Connect </h1>
               </div>
-              <div class="face face2">
-                  <div class=" c1 content">
+              <div className="face face2">
+                  <div className=" c1 content">
                   <h3>
                           <a href="https://www.linkedin.com/in/adamdipinto/" target="_blank">Follow Us</a>
                       </h3>
@@ -70,14 +68,14 @@ const TeamCard = ({ name,image,social,id}) => {
                   </div>
               </div>
           </div>
-      </div>: <div class={`container container-2`}>
-          <div class="card">
-              <div class="face bg-face face1">
+      </div>: <div className={`container container-2`}>
+          <div className="card">
+              <div className="face bg-face face1">
                   
                       <h1>Lets Get Connect </h1>
               </div>
-              <div class="face face2">
-                  <div class="c2 content">
+              <div className="face face2">
+                  <div className="c2 content">
                   <h3>
                           <a href="https://www.linkedin.com/in/adamdipinto/" target="_blank">Follow Us</a>
                       </h3>
