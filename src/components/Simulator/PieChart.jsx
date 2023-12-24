@@ -9,18 +9,21 @@ import {
 } from "@syncfusion/ej2-react-charts";
 import { useEffect, useState } from "react";
 
-const PieChart = ({ data, y, colorSchemes }) => {
+const PieChart = ({ data, y }) => {
   const [pieChartData, setPieChartData] = useState();
+  const [colorSchemes, setColorSchmemes] = useState([]);
 
   useEffect(() => {
-    let pieChartData = [];
+    let newPieChartData = [], newColorSchemes = [];
     data.forEach((process) => {
-      pieChartData.push({
+      newPieChartData.push({
         x: process.Pid,
         y: process[y],
       });
+      newColorSchemes.push(process.color);
     });
-    setPieChartData(pieChartData);
+    setPieChartData(newPieChartData);
+    setColorSchmemes(newColorSchemes);
   }, [])
 
   return (

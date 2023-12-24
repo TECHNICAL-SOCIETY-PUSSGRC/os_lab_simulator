@@ -99,6 +99,7 @@ export const createGanttChartData = (steps) => {
         arrivalTime: curTime,
         exitingTime: null,
         timeInCPU: null,
+        color: cpu.color
       })
     }else if(!isCPUFree && !cpu.Pid){
       // means the cpu was busy but now its free
@@ -272,7 +273,7 @@ export const StepWiseFCFS = (data) => {
 }
 
 // non repeatead random color array
-export const createRandomColorsArray = (noOfProcesses) => {
+export const createColorSchemes = (noOfProcesses) => {
   const makeColor = (colorNum, colors) => {
     if (colors < 1) colors = 1;  // defaults to one color - avoid divide by zero
     return colorNum * (360 / colors) % 360;

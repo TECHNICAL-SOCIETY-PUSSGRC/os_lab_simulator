@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo, createElement } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { ShinyButton } from '..'
-import { SampleData, StepWiseFCFS, createRandomColorsArray } from './data'
+import { SampleData, StepWiseFCFS, createColorSchemes } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
@@ -47,7 +47,6 @@ const Simulator = () => {
   const [avgTAT, setAvgTAT] = useState(0.0)
   const [animateAvgWT, setAnimateAvgWT] = useState(false)
   const [ganttChartData, setGanttChartData] = useState([[]])
-  const [colorSchemes, setColorSchmemes] = useState([])
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -124,28 +123,28 @@ const Simulator = () => {
     setAvgTAT(0.0)
     setAvgWT(0.0)
     setGanttChartData([])
-    setColorSchmemes([])
   }
   const handleRun = () => {
+    let newColorSchemes = createColorSchemes(noOfProcesses);
+    
     data.map((process, index) => {
       if(process.Pid === '') process.Pid = 'P' + (index+1)
       process.AT = (process.AT === '')? 0: parseInt(process.AT)
       process.BT = (process.BT === '')? 0: parseInt(process.BT)
-
-      // filling empty data
+      
+      // filling default data
       process.CT = process.TAT = process.WT = null 
       process.bgColor = {
         Pid: 'transparent', AT: 'transparent', BT: 'transparent', CT: 'transparent', TAT: 'transparent', WT: 'transparent'
       }
+      process.color = newColorSchemes[index]
     })
 
     let steps = StepWiseFCFS(data)
-    let newColorSchemes = createRandomColorsArray(noOfProcesses);
     console.log(steps)
 
     setIsRunning(true)
     setSteps(steps)
-    setColorSchmemes(newColorSchemes)
     
     handleAnimateOpacity()
   }
@@ -492,44 +491,46 @@ const Simulator = () => {
 
             <div className="flex flex-col py-5 px-10 gap-2">
               {ganttChartData.map((row, rowIndex) => {
-                  return <div key={rowIndex} className="flex flex-row justify-center">
-                    {row.map((process, colIndex) => {
-                      let index = rowIndex*7 + colIndex;
-                      return (
-                        <div key={colIndex} className='text-xl min-w-[60px] flex flex-col text-left transition-all duration-1000 ease-in-out' style={{ flexGrow: process.timeInCPU }}>
-                          <div 
-                            className="h-[50px] w-full border flex items-center justify-center"
-                            style={{ background: colorSchemes[index] }}
-                            data-tooltip-id={process.Pid}
-                            data-tooltip-place="top"
-                            data-tooltip-html={`
-                              <div class="flex flex-col text-black items-center justify-center gap-2">
-                                <div class="flex flex-row w-full py-2 items-center justify-center border-b-2 border-black gap-2">
-                                  <div class="rounded-full w-5 h-5 border-black border" style="background-color:${colorSchemes[index]};"></div>
-                                  <span class="text-base">${process.Pid}</span>
-                                </div>
+                  return (
+                    <div key={rowIndex} className="flex flex-row justify-center">
+                      {row.map((process, colIndex) => {
+                        console.log(process)
+                        return (
+                          <div key={colIndex} className='text-xl min-w-[60px] flex flex-col text-left transition-all duration-1000 ease-in-out' style={{ flexGrow: process.timeInCPU }}>
+                            <div 
+                              className="h-[50px] w-full border flex items-center justify-center"
+                              style={{ background: process.color }}
+                              data-tooltip-id={process.Pid}
+                              data-tooltip-place="top"
+                              data-tooltip-html={`
+                                <div class="flex flex-col text-black items-center justify-center gap-2">
+                                  <div class="flex flex-row w-full py-2 items-center justify-center border-b-2 border-black gap-2">
+                                    <div class="rounded-full w-5 h-5 border-black border" style="background-color:${process.color};"></div>
+                                    <span class="text-base">${process.Pid}</span>
+                                  </div>
 
-                                <div class="flex flex-col">
-                                  <span class="text-base">Arrival Time: ${process.arrivalTime}</span>
-                                  <span class="text-base">Exiting Time: ${process.exitingTime}</span>
-                                  <span class="text-base">Time In CPU: ${process.timeInCPU}</span>
+                                  <div class="flex flex-col">
+                                    <span class="text-base">Arrival Time: ${process.arrivalTime}</span>
+                                    <span class="text-base">Exiting Time: ${process.exitingTime}</span>
+                                    <span class="text-base">Time In CPU: ${process.timeInCPU}</span>
+                                  </div>
                                 </div>
-                              </div>
-                            `}
-                            data-tooltip-class-name="!bg-white !bg-opacity-90"
-                            data-tooltip-wrapper="div"
-                          >
-                            {process.Pid}
+                              `}
+                              data-tooltip-class-name="!bg-white"
+                              data-tooltip-wrapper="div"
+                            >
+                              {process.Pid}
+                            </div>
+                            <span className="ml-[-8px]"> {process.arrivalTime} </span>
+                            <Tooltip id={process.Pid} />
                           </div>
-                          <span className="ml-[-8px]"> {process.arrivalTime} </span>
-                          <Tooltip id={process.Pid} />
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
 
-                    {/* for Last Process in a line */}
-                    <span className="mt-[50px] ml-[-8px]"> {row[row.length-1]?.exitingTime} </span>
-                  </div>
+                      {/* for Last Process in a line */}
+                      <span className="mt-[50px] ml-[-8px]"> {row[row.length-1]?.exitingTime} </span>
+                    </div>
+                  )
               })}
             </div>
           </div>
@@ -543,13 +544,13 @@ const Simulator = () => {
               {/* WT PieChart */}
               <div className="w-[500px] h-[450px] text-2xl border">
                 <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Waiting Time (WT) </h2>
-                <PieChart data={steps[currentStepIndex].data} y='WT' colorSchemes={colorSchemes} />
+                <PieChart data={steps[currentStepIndex].data} y='WT' />
               </div>
 
               {/* TAT PieChart */}
               <div className="w-[500px] h-[450px] text-2xl border">
                 <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Turnaround Time (TAT) </h2>
-                <PieChart data={steps.length? steps[steps.length-1].data: {}} y='TAT' colorSchemes={colorSchemes} />
+                <PieChart data={steps[currentStepIndex].data} y='TAT' />
               </div>
             </div>
           </div>}
