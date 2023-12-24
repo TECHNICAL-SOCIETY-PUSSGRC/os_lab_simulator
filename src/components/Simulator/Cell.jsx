@@ -22,7 +22,7 @@ const Cell = ({ rowIndex, cellIndex, data, setData, animateOpacity, isRunning })
       className={`py-3 transition-opacity duration-500 ease-in-out  ${animateOpacity? 'opacity-0': 'opacity-100'}`}
       style={{ 
         backgroundColor: isRunning? data[rowIndex]['bgColor'][curCell]: 'transparent',
-        border: (isRunning && data[rowIndex]['bgColor'][curCell] === '#008F5A')? '3px solid': '1px solid'
+        border: (isRunning && data[rowIndex]['bgColor'][curCell] === 'rgba(0, 143, 90, 0.6)')? '3px solid': '1px solid'
       }}
     >
       <input

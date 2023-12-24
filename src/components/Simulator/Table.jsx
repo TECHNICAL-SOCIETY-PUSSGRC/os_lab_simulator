@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTable } from 'react-table';
-import { Cell, ShinyButton } from '.';
+import { Cell } from '.';
+import { ShinyButton } from '..';
 import { ImCross } from "react-icons/im";
 import { motion, AnimatePresence } from 'framer-motion'
 
