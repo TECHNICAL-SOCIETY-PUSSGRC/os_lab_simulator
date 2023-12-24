@@ -4,10 +4,8 @@ import Home_content from './Home_content'
 import Home_fly from './Home_fly'
 import Home_intro from './Home_intro'
 import Nav from './Nav'
-import Simulator from './Simulator'
+import Simulator from './Simulator/Simulator'
 import TeamCard from './TeamCard'
-import Table from './Table'
-import Cell from './Cell'
 
 export {
     ShinyButton,
@@ -18,6 +16,4 @@ export {
     Nav,
     Simulator,
     TeamCard,
-    Table,
-    Cell
 }
