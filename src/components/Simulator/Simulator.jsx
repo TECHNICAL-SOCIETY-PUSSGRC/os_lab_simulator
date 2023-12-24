@@ -427,7 +427,7 @@ const Simulator = () => {
             <div className="flex flex-row justify-between w-[800px] mx-auto">
               <div className="flex flex-row gap-5">
                 <ShinyButton 
-                  className="text-xl border px-3 py-2"
+                  className={`text-xl border px-3 py-2 ${currentStepIndex === steps.length-1? 'opacity-50': ''}`}
                   text="Show Final Result"
                   onClick={handleShowFinalResult}
                 />
@@ -437,7 +437,7 @@ const Simulator = () => {
                   onClick={handleReset}
                 />
                 <ShinyButton 
-                  className="text-xl border px-3 py-2"
+                  className={`text-xl border px-3 py-2 ${currentStepIndex === -1? 'opacity-50': ''}`}
                   text="Restart"
                   onClick={handleRestart}
                 />
@@ -445,12 +445,12 @@ const Simulator = () => {
 
               <div className="flex flex-row gap-5">
                 <ShinyButton 
-                  className="text-xl border px-3 py-2"
+                  className={`text-xl border px-3 py-2 ${currentStepIndex === -1? 'opacity-50': ''}`}
                   text="Prev"
                   onClick={handlePrev}
                 />
                 <ShinyButton 
-                  className="text-xl border px-3 py-2"
+                  className={`text-xl border px-3 py-2 ${currentStepIndex === steps.length-1? 'opacity-50': ''}`}
                   text="Next"
                   onClick={handleNext}
                 />
