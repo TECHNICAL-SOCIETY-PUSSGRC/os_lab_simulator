@@ -543,13 +543,13 @@ const Simulator = () => {
               {/* WT PieChart */}
               <div className="w-[500px] h-[450px] text-2xl border">
                 <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Waiting Time (WT) </h2>
-                <PieChart data={steps[currentStepIndex].data} y='WT' />
+                <PieChart data={steps[currentStepIndex].data} y='WT' colorSchemes={colorSchemes} />
               </div>
 
               {/* TAT PieChart */}
               <div className="w-[500px] h-[450px] text-2xl border">
                 <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Turnaround Time (TAT) </h2>
-                <PieChart data={steps.length? steps[steps.length-1].data: {}} y='TAT' />
+                <PieChart data={steps.length? steps[steps.length-1].data: {}} y='TAT' colorSchemes={colorSchemes} />
               </div>
             </div>
           </div>}

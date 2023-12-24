@@ -9,7 +9,7 @@ import {
 } from "@syncfusion/ej2-react-charts";
 import { useEffect, useState } from "react";
 
-const PieChart = ({ data, y }) => {
+const PieChart = ({ data, y, colorSchemes }) => {
   const [pieChartData, setPieChartData] = useState();
 
   useEffect(() => {
@@ -29,6 +29,7 @@ const PieChart = ({ data, y }) => {
         height="400px"
         enableSmartLabels='true'
         tooltip={{ enable: true }}
+        colors={colorSchemes}
         background="transparent"
         textRender = {(args) => {
           // args.text = args.point.percentage + "%";
@@ -54,6 +55,7 @@ const PieChart = ({ data, y }) => {
             explodeOffset="17"
             explodeIndex={0}
             dataLabel={{ visible: true }}
+            palettes={colorSchemes}
           />
         </AccumulationSeriesCollectionDirective>
       </AccumulationChartComponent>
