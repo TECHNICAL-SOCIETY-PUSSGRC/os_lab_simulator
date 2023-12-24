@@ -29,7 +29,6 @@ const PieChart = ({ data, y, colorSchemes }) => {
         height="400px"
         enableSmartLabels='true'
         tooltip={{ enable: true }}
-        colors={colorSchemes}
         background="transparent"
         textRender = {(args) => {
           // args.text = args.point.percentage + "%";
