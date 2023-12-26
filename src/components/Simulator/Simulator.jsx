@@ -4,6 +4,13 @@ import { SampleData, StepWiseFCFS, createColorSchemes } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
+import { InView } from 'react-intersection-observer'
+import { Element, scroller } from 'react-scroll';
+import { TbEdit } from "react-icons/tb";
+import { MdOutlineDoneOutline } from "react-icons/md";
+import { FaRegSave } from "react-icons/fa";
+import { MdBookmarks } from "react-icons/md";
+
 
 const Simulator = () => {
   const columnsBeforeRunning = useMemo(() => [
@@ -46,7 +53,10 @@ const Simulator = () => {
   const [avgWT, setAvgWT] = useState(0.0)
   const [avgTAT, setAvgTAT] = useState(0.0)
   const [animateAvgWT, setAnimateAvgWT] = useState(false)
+  const [animateAvgTAT, setAnimateAvgTAT] = useState(false)
   const [ganttChartData, setGanttChartData] = useState([[]])
+  const [isEditingNoOfProcesses, setIsEditingNoOfProcesses] = useState(false)
+  const [tempNoOfProcesses, setTempNoOfProcesses] = useState(noOfProcesses)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -57,16 +67,6 @@ const Simulator = () => {
   const processExplanationMessage = (msg) => {
     return msg.split("\n")
   }
-  const calculateAvgWTandTAT = () => {
-    let sumWT = 0.0, sumTAT = 0.0
-    data.map((process) => {
-      sumWT += process.WT
-      sumTAT += process.TAT
-    })
-
-    setAvgWT((sumWT / noOfProcesses).toFixed(2))
-    setAvgTAT((sumTAT / noOfProcesses).toFixed(2))
-  }
 
   /* Functionalities Functions */
   const handleChangeAlgoClick = () => {
@@ -76,6 +76,35 @@ const Simulator = () => {
   const handleChangeAlgo = (e) => {
     setAlgo(e.target.value)
     setIsAlgoOpen(false);
+  }
+  const handleEditNoOfProcesses = () => {
+    const newNoOfProcesses = tempNoOfProcesses
+
+    // in case user enters an empty string
+    if(typeof newNoOfProcesses === 'string' && newNoOfProcesses.trim() === ''){
+      setIsEditingNoOfProcesses(false)
+      return; 
+    }
+    if(newNoOfProcesses <= 0){
+      alert('No. of Processes must be greater than 0!')
+      return;
+    }
+
+    const newData = [...data]
+    while(newData.length < newNoOfProcesses){
+      newData.push({
+        Pid: "P" + (newData.length+1),
+        AT: 0,
+        BT: 0
+      })
+    }
+    while(newData.length > newNoOfProcesses){
+      newData.pop()
+    }
+
+    if(data.toString() !== newData.toString()) setData(newData)
+    setNoOfProcesses(newNoOfProcesses)
+    setIsEditingNoOfProcesses(false)
   }
   const handleContextTimeChange = (e) => {
     setContextSwitchTime(e.target.value)
@@ -110,20 +139,6 @@ const Simulator = () => {
     setData(newData)
     setNoOfProcesses(newData.length)
   }
-  const handleReset = () => {
-    setCurrentStepIndex(-1)
-    setData([])
-    setNoOfProcesses(0)
-    setIsRunning(false)
-    setCurrentTime(0)
-    setCPU({Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT'}])
-    setStack(['Pid'])
-    setExplanationMessage([''])
-    setAvgTAT(0.0)
-    setAvgWT(0.0)
-    setGanttChartData([])
-  }
   const handleRun = () => {
     let newColorSchemes = createColorSchemes(noOfProcesses);
     
@@ -148,13 +163,39 @@ const Simulator = () => {
     
     handleAnimateOpacity()
   }
+  const handleReset = () => {
+    setCurrentStepIndex(-1)
+    setData([])
+    setNoOfProcesses(0)
+    setIsRunning(false)
+    setCurrentTime(0)
+    setCPU({Pid: 'Pid', RT: 'RT'})
+    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setStack(['Pid'])
+    setExplanationMessage([''])
+    setAvgTAT(0.0)
+    setAvgWT(0.0)
+    setGanttChartData([])
+  }
+  const handleEdit = () => {
+    setIsRunning(false)
+    setCurrentStepIndex(-1)
+    setCurrentTime(0)
+    setCPU({Pid: 'Pid', RT: 'RT'})
+    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setStack(['Pid'])
+    setExplanationMessage([''])
+    setAvgTAT(0.0)
+    setAvgWT(0.0)
+    setGanttChartData([])
+  }
   const handleNext = () => {
     if(currentStepIndex === steps.length-1) return;
 
     const newStepIndex = currentStepIndex + 1
     setCurrentStepIndex(newStepIndex)
 
-    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData } = steps[newStepIndex]
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData, avgTAT: newAvgTAT, avgWT: newAvgWT } = steps[newStepIndex]
     setExplanationMessage(processExplanationMessage(msg))
 
     if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
@@ -163,7 +204,17 @@ const Simulator = () => {
 
     setCurrentTime(curTime)
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
-    if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
+    if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)){
+      scroller.scrollTo('ganttChart', {
+        delay: 2000,
+        smooth: true,
+        offset: -(window.innerHeight - document.getElementById("ganttChart").offsetHeight)
+      });
+      setGanttChartData(newGanttChartData)
+    }
+
+    if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
+    if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
   }
   const handlePrev = () => {
     if(currentStepIndex === -1) return;
@@ -180,7 +231,7 @@ const Simulator = () => {
       return;
     }
 
-    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData } = steps[newStepIndex]
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData, avgTAT: newAvgTAT, avgWT: newAvgWT } = steps[newStepIndex]
     setExplanationMessage(processExplanationMessage(msg))
 
     if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
@@ -190,12 +241,15 @@ const Simulator = () => {
     setCurrentTime(curTime)
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
+    
+    if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
+    if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
   }
   const handleShowFinalResult = () => {
     const newStepIndex = steps.length-1
     setCurrentStepIndex(newStepIndex)
 
-    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData } = steps[newStepIndex]
+    const { cpu: newCPU, queue: newQueue, completed: newStack, curTime, data: newData, msg, ganttChartData: newGanttChartData, avgTAT: newAvgTAT, avgWT: newAvgWT } = steps[newStepIndex]
     setExplanationMessage(processExplanationMessage(msg))
 
     if(JSON.stringify(cpu) !== JSON.stringify(newCPU)) setCPU(newCPU)
@@ -203,9 +257,12 @@ const Simulator = () => {
     if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
 
     setCurrentTime(curTime)
-
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
+
+    if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
+    if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
+
     handleAnimateOpacity()
   }
   const handleRestart = () => {
@@ -216,9 +273,17 @@ const Simulator = () => {
     setQueue([{ Pid: 'Pid', AT: 'AT'}])
     setStack(['Pid'])
     setGanttChartData([])
+    setAvgWT(0.0)
+    setAvgTAT(0.0)
 
     const { data: newData } = steps[0]
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
+  }
+  const handleSave = () => {
+
+  }
+  const handleLoad = () => {
+    
   }
 
 
@@ -235,6 +300,7 @@ const Simulator = () => {
   }, [isAlgoOpen])
 
   useEffect(() => {
+    setTempNoOfProcesses(noOfProcesses)
     setAnimateShine(true);
     const timeoutId = setTimeout(() => setAnimateShine(false), 1000);
     return () => clearTimeout(timeoutId);
@@ -271,19 +337,28 @@ const Simulator = () => {
   }, [explanationMessage])
 
   useEffect(() => {
-    if(isRunning && currentStepIndex === steps.length-1){
-      calculateAvgWTandTAT()
-    }else if(avgWT || avgTAT){
-      setAvgWT(0.0)
-      setAvgTAT(0.0)
-    }
-  }, [currentStepIndex])
+    if(!Boolean(avgWT)) return; 
+    scroller.scrollTo('pieCharts', {
+      delay: 2000,
+      smooth: true,
+    });
 
-  useEffect(() => {
     setAnimateAvgWT(true)
     const timeoutId = setTimeout(() => setAnimateAvgWT(false), 1000)
     return () => clearTimeout(timeoutId)
-  }, [avgTAT, avgWT])
+  }, [avgWT])
+
+  useEffect(() => {
+    if(!Boolean(avgTAT)) return; 
+    scroller.scrollTo('pieCharts', {
+      delay: 2000,
+      smooth: true,
+    });
+
+    setAnimateAvgTAT(true)
+    const timeoutId = setTimeout(() => setAnimateAvgTAT(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [avgTAT])
 
   // useEffect(() => console.log("data: ", data), [data])
 
@@ -370,11 +445,34 @@ const Simulator = () => {
               </div>
             </div>
           </div>
-        :  
-          /* Simulator Sidebar Before Running */
-          <div className="flex flex-col gap-5 my-auto border p-5 justify-center items-center text-left text-2xl">
+        : 
+        /* Simulator Sidebar Before Running */ 
+        <div className="flex flex-col gap-10 my-auto">
+          <div className="flex flex-col gap-5 border p-5 justify-center items-center text-2xl">
             <div className="relative group overflow-hidden">
-              Total No. of Processes: {noOfProcesses}
+              <div className="flex flex-row items-center gap-3">
+                Total No. of Processes: 
+                {!isEditingNoOfProcesses? <>
+                  &nbsp;{noOfProcesses} 
+                  <button onClick={() => setIsEditingNoOfProcesses(true)}>
+                    <TbEdit />
+                  </button>
+                </>
+                : <>
+                  <input 
+                    type="number"
+                    name="noOfProcesses"
+                    min={1}
+                    placeholder={noOfProcesses}
+                    value={tempNoOfProcesses}
+                    onChange={(e) => setTempNoOfProcesses(e.target.value)}
+                    className="w-[60px] text-center bg-transparent border-b-2 focus:outline-none"
+                  />
+                  <button className="text-lg rounded-full border-2 p-[6px]" onClick={handleEditNoOfProcesses}>
+                    <MdOutlineDoneOutline />
+                  </button>
+                </>}
+              </div>
 
               {/* Shiny div */}
               <div className={`absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 ${animateShine? 'animate-shine': ''}`} />
@@ -408,10 +506,33 @@ const Simulator = () => {
               text="Add Process"
               onClick={handleAddProcess}
             />
-          </div> 
-        }
+          </div>
 
-        <div className="flex flex-col flex-grow-[1] gap-10">
+          <div className="flex flex-col gap-5 border p-5 justify-center items-center text-2xl">
+            <ShinyButton 
+              className="text-left w-fit"
+              text={
+                <span className="flex flex-row items-center gap-3">
+                  <FaRegSave />
+                  Save Current Input
+                </span>
+              }
+              onClick={handleSave}
+            />
+            <ShinyButton 
+              className="text-left w-fit"
+              text={
+                <span className="flex flex-row items-center gap-3">
+                  <MdBookmarks />
+                  Load Saved Inputs
+                </span>
+              }
+              onClick={handleLoad}
+            />
+          </div>
+        </div>}
+
+        <div className="flex flex-col items-center flex-grow-[1] gap-10">
           {/* Table */}
           <Table 
             data={data} 
@@ -422,19 +543,27 @@ const Simulator = () => {
             columns={isRunning? columnsWhileRunning: columnsBeforeRunning}
           />
           
-          {isRunning && <>
+          {isRunning ? <>
             {/* Simulation Buttons Section While Running */}
-            <div className="flex flex-row justify-between w-[800px] mx-auto">
+            <div className="flex flex-row justify-between w-[800px]">
               <div className="flex flex-row gap-5">
                 <ShinyButton 
-                  className={`text-xl border px-3 py-2 ${currentStepIndex === steps.length-1? 'opacity-50': ''}`}
-                  text="Show Final Result"
-                  onClick={handleShowFinalResult}
+                  className="text-xl border px-3 py-2"
+                  text="Edit"
+                  onClick={handleEdit}
                 />
                 <ShinyButton 
                   className="text-xl border px-3 py-2"
                   text="Reset"
                   onClick={handleReset}
+                />
+              </div>
+
+              <div className="flex flex-row gap-5">
+                <ShinyButton 
+                  className={`text-xl border px-3 py-2 ${currentStepIndex === steps.length-1? 'opacity-50': ''}`}
+                  text="Show Final Result"
+                  onClick={handleShowFinalResult}
                 />
                 <ShinyButton 
                   className={`text-xl border px-3 py-2 ${currentStepIndex === -1? 'opacity-50': ''}`}
@@ -456,20 +585,34 @@ const Simulator = () => {
                 />
               </div>
             </div>
-
-            {/* Avg WT and TAT section */}
-            {Boolean(avgTAT) && <div className={`flex flex-col gap-5 w-[800px] mx-auto items-start text-xl transition-opacity ease-in-out duration-1000 ${animateAvgWT? 'opacity-0': 'opacity-100'}`}>
-              <div>
-                <span className="border-b-2">Average Waiting Time:</span>
-                <span> &nbsp;{avgWT} </span>
-              </div>
-
-              <div>
+            
+            <div className="flex flex-col gap-5 w-[800px] items-start text-xl">
+              {/* Avg TAT section */}
+              {Boolean(avgTAT) && <div className={`transition-opacity ease-in-out duration-1000 ${animateAvgTAT? 'opacity-0': 'opacity-100'}`}>
                 <span className="border-b-2">Average Turn Around Time:</span>
                 <span> &nbsp;{avgTAT} </span>
-              </div>
-            </div>}
-          </>}
+              </div>}
+
+              {/* Avg WT section */}
+              {Boolean(avgWT) && <div className={`transition-opacity ease-in-out duration-1000 ${animateAvgWT? 'opacity-0': 'opacity-100'}`}>
+                <span className="border-b-2">Average Waiting Time:</span>
+                <span> &nbsp;{avgWT} </span>
+              </div>}
+            </div>
+          </>
+          :  /* Simulator Buttons Section Before Running */
+          <div className="flex flex-row gap-5 w-full justify-end mt-16 pr-10">
+            <ShinyButton 
+              className="text-xl border px-3 py-2"
+              text="Reset"
+              onClick={handleReset}
+            />
+            <ShinyButton 
+              className="text-xl border px-3"
+              text="Run"
+              onClick={handleRun}
+            />
+          </div>}
         </div>
         
         {/* Completed Stack Section */}
@@ -483,18 +626,16 @@ const Simulator = () => {
         </div>}
       </div>
 
-      {isRunning?
-        <div className="py-10">
+      {isRunning && <div className="py-10">
           {/* Gantt Chart */}
-          <div className="flex flex-col h-fit justify-center">
-            <h2 className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Gantt Chart </h2>
+          <div id="ganttChart" className="flex flex-col h-fit justify-center">
+            <Element name="ganttChart" className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Gantt Chart </Element>
 
             <div className="flex flex-col py-5 px-10 gap-2">
               {ganttChartData.map((row, rowIndex) => {
                   return (
                     <div key={rowIndex} className="flex flex-row justify-center">
                       {row.map((process, colIndex) => {
-                        console.log(process)
                         return (
                           <div key={colIndex} className='text-xl min-w-[60px] flex flex-col text-left transition-all duration-1000 ease-in-out' style={{ flexGrow: process.timeInCPU }}>
                             <div 
@@ -536,40 +677,37 @@ const Simulator = () => {
           </div>
 
           {/* Pie Charts */}
-          {currentStepIndex === steps.length-1 && 
+          {(currentStepIndex >= steps.length-2*noOfProcesses-3) &&
           <div className="flex flex-col h-fit justify-center">
-            <h2 className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Pie Charts </h2>
+            <Element name="pieCharts" className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Pie Charts </Element>
             
             <div className="flex flex-row justify-evenly mt-8">
-              {/* WT PieChart */}
-              <div className="w-[500px] h-[450px] text-2xl border">
-                <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Waiting Time (WT) </h2>
-                <PieChart data={steps[currentStepIndex].data} y='WT' />
-              </div>
-
               {/* TAT PieChart */}
-              <div className="w-[500px] h-[450px] text-2xl border">
-                <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Turnaround Time (TAT) </h2>
-                <PieChart data={steps[currentStepIndex].data} y='TAT' />
-              </div>
+              {Boolean(avgTAT) && <div className="w-[500px] h-[450px] text-2xl border">
+                <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Turnaround Time (TAT) </h2>  
+                <InView threshold={0}>
+                  {({ inView, ref }) => (
+                    <div ref={ref} className={`transition-opacity ${inView? 'opacity-100': 'opacity-0'}`}>
+                      {inView && <PieChart data={steps[steps.length - 1].data} y='TAT' />}
+                    </div>
+                  )}
+                </InView>
+              </div>}
+
+              {/* WT PieChart */}
+              {Boolean(avgWT) && <div className="w-[500px] h-[450px] text-2xl border">
+                <h2 className="text-2xl border-b-2 py-2 px-5 mx-auto w-fit"> Waiting Time (WT) </h2>
+                <InView threshold={0}>
+                  {({ inView, ref }) => (
+                    <div ref={ref} className={`transition-opacity ${inView? 'opacity-100': 'opacity-0'}`}>
+                      {inView && <PieChart data={steps[steps.length - 1].data} y='WT' />}
+                    </div>
+                  )}
+                </InView>
+              </div>}
             </div>
           </div>}
-        </div>
-      : 
-        /* Simulator Buttons Section Before Running */
-        <div className="flex flex-row gap-5 justify-end mt-16 pr-10">
-          <ShinyButton 
-            className="text-xl border px-3 py-2"
-            text="Reset"
-            onClick={handleReset}
-          />
-          <ShinyButton 
-            className="text-xl border px-3"
-            text="Run"
-            onClick={handleRun}
-          />
-        </div>
-      }
+      </div>}
     </div>
   )
 }

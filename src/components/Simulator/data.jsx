@@ -130,6 +130,7 @@ export const StepWiseFCFS = (data) => {
   let cpuProcessCT = -1 // required time units count at which process that is currently running in cpu will be completed
   let curTime = 0 // current time units count
   let timeGap = 0, prevRT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
+  let avgTAT = 0.0, avgWT = 0.0;
 
   const updateData = (newData) => data[newData.originalIndex] = newData
   const pushInSteps = (msg) => {
@@ -140,6 +141,8 @@ export const StepWiseFCFS = (data) => {
       curTime,
       data: createCopyJSON(data),
       msg,
+      avgTAT,
+      avgWT,
       ganttChartData: []
     })
 
@@ -259,7 +262,8 @@ export const StepWiseFCFS = (data) => {
       TAT: 'rgba(96, 130, 182, 0.6)'
     }
   })
-  pushInSteps(`All the processes are completed.\nAverage TAT: ${(data.reduce((acc, cur) => acc + cur.TAT, 0) / data.length).toFixed(2)}`)
+  avgTAT = (data.reduce((acc, cur) => acc + cur.TAT, 0) / data.length).toFixed(2)
+  pushInSteps(`All the processes are completed.\nAverage TAT: ${avgTAT}`)
   
   data.map((process) => {
     process.bgColor = {
@@ -267,7 +271,8 @@ export const StepWiseFCFS = (data) => {
       WT: 'rgba(96, 130, 182, 0.6)'
     }
   })
-  pushInSteps(`Average WT: ${(data.reduce((acc, cur) => acc + cur.WT, 0) / data.length).toFixed(2)}`)
+  avgWT = (data.reduce((acc, cur) => acc + cur.WT, 0) / data.length).toFixed(2)
+  pushInSteps(`Average WT: ${avgWT}`)
   
   return steps;
 }

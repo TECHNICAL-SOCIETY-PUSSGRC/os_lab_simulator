@@ -12,18 +12,27 @@ import { useEffect, useState } from "react";
 const PieChart = ({ data, y }) => {
   const [pieChartData, setPieChartData] = useState();
   const [colorSchemes, setColorSchmemes] = useState([]);
+  const [explodeIndex, setExplodeIndex] = useState(0);
 
   useEffect(() => {
     let newPieChartData = [], newColorSchemes = [];
-    data.forEach((process) => {
+    let newExplodeIndex = 0;
+
+    data.forEach((process, curIndex) => {
       newPieChartData.push({
         x: process.Pid,
         y: process[y],
       });
       newColorSchemes.push(process.color);
+
+      // Choose the first non-zero value
+      if(!data[explodeIndex][y] && process[y] > 0) newExplodeIndex = curIndex;
     });
+    if(newExplodeIndex === -1) newExplodeIndex = 0;
+
     setPieChartData(newPieChartData);
     setColorSchmemes(newColorSchemes);
+    setExplodeIndex(newExplodeIndex);
   }, [])
 
   return (
@@ -34,7 +43,6 @@ const PieChart = ({ data, y }) => {
         tooltip={{ enable: true }}
         background="transparent"
         textRender = {(args) => {
-          // args.text = args.point.percentage + "%";
           args.font.color = 'white';
           args.font.size = '16px';
         }}
@@ -55,7 +63,7 @@ const PieChart = ({ data, y }) => {
             type="Pie"
             explode={true}
             explodeOffset="17"
-            explodeIndex={0}
+            explodeIndex={explodeIndex}
             dataLabel={{ visible: true }}
             palettes={colorSchemes}
           />
