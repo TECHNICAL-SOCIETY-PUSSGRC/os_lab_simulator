@@ -6,8 +6,10 @@ import { BrowserRouter } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <App />
+  <>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
     <Analytics />
-  </BrowserRouter>
+  </>
 )
