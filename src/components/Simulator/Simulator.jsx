@@ -445,9 +445,8 @@ const Simulator = () => {
               </div>
             </div>
           </div>
-        : 
-        /* Simulator Sidebar Before Running */ 
-        <div className="flex flex-col gap-10 my-auto">
+        : /* Simulator Sidebar Before Running */ 
+        <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-5 border p-5 justify-center items-center text-2xl">
             <div className="relative group overflow-hidden">
               <div className="flex flex-row items-center gap-3">
@@ -601,7 +600,7 @@ const Simulator = () => {
             </div>
           </>
           :  /* Simulator Buttons Section Before Running */
-          <div className="flex flex-row gap-5 w-full justify-end mt-16 pr-10">
+          <div className="flex flex-row gap-5 w-full justify-end mt-5 mb-10 pr-10">
             <ShinyButton 
               className="text-xl border px-3 py-2"
               text="Reset"

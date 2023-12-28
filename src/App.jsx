@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { HomePage, DocsPage, SimulatorPage, AboutPage } from './pages'
+import { Analytics } from '@vercel/analytics/react'
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Route path='/simulator' element={<SimulatorPage/>} />
         <Route path='/about' element={<AboutPage/>} />
       </Routes>
+      <Analytics />
     </div>
   )
 }
