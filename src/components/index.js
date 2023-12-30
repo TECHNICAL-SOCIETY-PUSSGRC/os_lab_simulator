@@ -6,6 +6,9 @@ import Home_intro from './Home_intro'
 import Nav from './Nav'
 import Simulator from './Simulator/Simulator'
 import TeamCard from './TeamCard'
+import SpringButton from './SpringButton'
+import SignIn from './SignIn'
+import SignUp from './SignUp'
 
 export {
     ShinyButton,
@@ -16,4 +19,7 @@ export {
     Nav,
     Simulator,
     TeamCard,
+    SpringButton,
+    SignIn,
+    SignUp
 }

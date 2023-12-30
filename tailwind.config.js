@@ -19,6 +19,9 @@ export default {
           "100%": { marginLeft: 0, width: "100%" },
         }
       },
+      backgroundColor: {
+        'half-transparent': 'rgba(0, 0, 0, 0.5)',
+      }
     },
   },
   plugins: [],

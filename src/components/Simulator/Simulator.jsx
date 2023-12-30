@@ -10,6 +10,9 @@ import { TbEdit } from "react-icons/tb";
 import { MdOutlineDoneOutline } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import { MdBookmarks } from "react-icons/md";
+import LoadAllInputsDialogueBox from "./LoadAllInputsDialogueBox"
+import SaveInputDialogueBox from "./SaveInputDialogueBox"
+import { Toaster } from "react-hot-toast"
 
 
 const Simulator = () => {
@@ -57,6 +60,8 @@ const Simulator = () => {
   const [ganttChartData, setGanttChartData] = useState([[]])
   const [isEditingNoOfProcesses, setIsEditingNoOfProcesses] = useState(false)
   const [tempNoOfProcesses, setTempNoOfProcesses] = useState(noOfProcesses)
+  const [isVisibleSave, setIsVisibleSave] = useState(false)
+  const [isVisibleLoad, setIsVisibleLoad] = useState(false)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -246,6 +251,8 @@ const Simulator = () => {
     if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
   }
   const handleShowFinalResult = () => {
+    if(currentStepIndex === steps.length-1) return;
+
     const newStepIndex = steps.length-1
     setCurrentStepIndex(newStepIndex)
 
@@ -258,14 +265,28 @@ const Simulator = () => {
 
     setCurrentTime(curTime)
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
-    if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
+
+    let timeoutId = null
+    let tempGanttChartData = newGanttChartData.map((row) => {
+      return row.map((process) => {
+        return {
+          ...process,
+          timeInCPU: 0,
+        }
+      })
+    })
+    setGanttChartData(tempGanttChartData)
+    timeoutId = setTimeout(() => setGanttChartData(newGanttChartData), 2500)
 
     if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
     if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
 
     handleAnimateOpacity()
+    return () => clearTimeout(timeoutId)
   }
   const handleRestart = () => {
+    if(currentStepIndex === -1) return;
+
     setCurrentStepIndex(-1)
     setExplanationMessage([''])
     setCurrentTime(0)
@@ -280,10 +301,10 @@ const Simulator = () => {
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
   }
   const handleSave = () => {
-
+    setIsVisibleSave(true)
   }
   const handleLoad = () => {
-    
+    setIsVisibleLoad(true)
   }
 
 
@@ -410,7 +431,7 @@ const Simulator = () => {
         </div>
       </div>}
 
-      <div className="w-full flex flex-row pl-5 pt-10 gap-16">
+      <div className="w-full flex flex-row pl-5 py-10 gap-16">
         {isRunning?
           <div className="flex flex-col gap-10">
             {/* CPU Section */}
@@ -447,7 +468,9 @@ const Simulator = () => {
           </div>
         : /* Simulator Sidebar Before Running */ 
         <div className="flex flex-col gap-10">
+          {/* Section-1 */}
           <div className="flex flex-col gap-5 border p-5 justify-center items-center text-2xl">
+            {/* Total No of Processes */}
             <div className="relative group overflow-hidden">
               <div className="flex flex-row items-center gap-3">
                 Total No. of Processes: 
@@ -477,7 +500,8 @@ const Simulator = () => {
               <div className={`absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 ${animateShine? 'animate-shine': ''}`} />
             </div>
             
-            <div className="flex flex-row items-center">
+            {/* Context Switch Time */}
+            {/* <div className="flex flex-row items-center">
               Context Switch Time:
               <input 
                 type="number" 
@@ -486,9 +510,9 @@ const Simulator = () => {
                 step={0.1} 
                 value={contextSwitchTime} 
                 onChange={handleContextTimeChange} 
-                className="ml-2 px-2 w-[100px] text-center bg-transparent border-b-2 focus:outline-none"
+                className="ml-2 px-2 w-[80px] text-center bg-transparent border-b-2 focus:outline-none"
               />
-            </div>
+            </div> */}
             
             <ShinyButton 
               className="text-left border-b-2 w-fit"
@@ -506,7 +530,8 @@ const Simulator = () => {
               onClick={handleAddProcess}
             />
           </div>
-
+          
+          {/* Section-2 */}
           <div className="flex flex-col gap-5 border p-5 justify-center items-center text-2xl">
             <ShinyButton 
               className="text-left w-fit"
@@ -600,7 +625,7 @@ const Simulator = () => {
             </div>
           </>
           :  /* Simulator Buttons Section Before Running */
-          <div className="flex flex-row gap-5 w-full justify-end mt-5 mb-10 pr-10">
+          <div className="flex flex-row gap-5 w-full justify-end mt-5 pr-10">
             <ShinyButton 
               className="text-xl border px-3 py-2"
               text="Reset"
@@ -707,6 +732,20 @@ const Simulator = () => {
             </div>
           </div>}
       </div>}
+
+      <SaveInputDialogueBox 
+        isVisible={isVisibleSave} 
+        handleClick={() => setIsVisibleSave(false)}
+        data={data}
+      />
+
+      {isVisibleLoad && <LoadAllInputsDialogueBox 
+        isVisible={isVisibleLoad} 
+        handleClick={() => setIsVisibleLoad(false)}
+        setData={setData}
+      />}
+
+      <Toaster position="top-right" />
     </div>
   )
 }

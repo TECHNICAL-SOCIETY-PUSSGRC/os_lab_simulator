@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useTable } from 'react-table';
-import { Cell } from '.';
+import Cell from './Cell.jsx';
 import { ShinyButton } from '..';
 import { ImCross } from "react-icons/im";
 import { motion, AnimatePresence } from 'framer-motion'
 
-const Table = ({ data, setData, setNoOfProcesses, animateOpacity, columns, isRunning }) => {
+const Table = ({ data, setData, setNoOfProcesses, animateOpacity=false, columns, isRunning=false, isDeleteRowAllowed=true, thClassName, crossClassName, isDisableEditing=false }) => {
   const spring = useMemo(
     () => ({
       type: 'spring',
@@ -34,7 +34,7 @@ const Table = ({ data, setData, setNoOfProcesses, animateOpacity, columns, isRun
               {headerGroup.headers.map(column => (
                 <th 
                   {...column.getHeaderProps()} 
-                  className='border-solid border border-[#ddd] py-3'
+                  className={`border py-3 ${thClassName}`}
                 >
                   {column.render('Header')}
                 </th>
@@ -66,6 +66,7 @@ const Table = ({ data, setData, setNoOfProcesses, animateOpacity, columns, isRun
                             setData={setData}
                             animateOpacity={animateOpacity}
                             isRunning={isRunning}
+                            isDisabled={isDisableEditing}
                           />
                         )
                     })}
@@ -77,7 +78,7 @@ const Table = ({ data, setData, setNoOfProcesses, animateOpacity, columns, isRun
       </table>
       
       {/* DeleteRow Buttons */}
-      {!isRunning && <div className='flex flex-col mt-12'>
+      {!isRunning && isDeleteRowAllowed && <div className='flex flex-col mt-12'>
         {
           data.map((row, index) => {
             return (
@@ -85,7 +86,7 @@ const Table = ({ data, setData, setNoOfProcesses, animateOpacity, columns, isRun
                 <ShinyButton
                   text={<ImCross />}
                   onClick={() => handleDeleteRow(index)}
-                  className="p-2 text-xs rounded-full border border-gray-500 text-gray-500 hover:text-white hover:border-white"
+                  className={`p-2 text-xs rounded-full border border-gray-500 text-gray-500 hover:text-white hover:border-white ${crossClassName}`}
                 />
               </div>
             )
