@@ -1,4 +1,4 @@
-const ShinyButton = ({ children, className, text, onClick, inset="full" }) => {
+const ShinyButton = ({ children, className, text, onClick, inset="full", bindKey }) => {
   return (
     <button
       className={`relative group overflow-hidden ${className}`}

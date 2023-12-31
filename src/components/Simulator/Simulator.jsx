@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useMemo, componentDidMount, componentWillUnmount } from "react"
 import { ShinyButton } from '..'
 import { SampleData, StepWiseFCFS, createColorSchemes } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
 import { InView } from 'react-intersection-observer'
-import { Element, scroller } from 'react-scroll';
+import { Element, scroller, animateScroll } from 'react-scroll';
 import { TbEdit } from "react-icons/tb";
 import { MdOutlineDoneOutline } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
@@ -71,6 +71,15 @@ const Simulator = () => {
   }
   const processExplanationMessage = (msg) => {
     return msg.split("\n")
+  }
+  const animateScrollToPieCharts = () => {
+    scroller.scrollTo('explanationMsgSection', {
+      smooth: true,
+    })
+    const timeoutId1 = setTimeout(() => scroller.scrollTo('pieCharts', {
+      smooth: true,
+    }), 3000)
+    return () => clearTimeout(timeoutId1)
   }
 
   /* Functionalities Functions */
@@ -213,7 +222,6 @@ const Simulator = () => {
       scroller.scrollTo('ganttChart', {
         delay: 2000,
         smooth: true,
-        offset: -(window.innerHeight - document.getElementById("ganttChart").offsetHeight)
       });
       setGanttChartData(newGanttChartData)
     }
@@ -246,7 +254,7 @@ const Simulator = () => {
     setCurrentTime(curTime)
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
-    
+
     if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
     if(avgWT !== newAvgWT) setAvgWT(newAvgWT)
   }
@@ -306,8 +314,30 @@ const Simulator = () => {
   const handleLoad = () => {
     setIsVisibleLoad(true)
   }
+  
 
+  /* useEffect for binding keys */
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if(!isRunning){
+        if(e.key === 'Enter') handleRun()
+      }else{
+    console.log(e.key)
+        if(e.key === 'ArrowRight') handleNext()
+        if(e.key === 'ArrowLeft') handlePrev()
+        if(e.key === 'Enter') handleShowFinalResult()
+        if(e.key === 'Backspace') handleRestart()
+        if(e.key === 'Escape') handleEdit()
+      }
+    }
 
+    document.body.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isRunning, currentStepIndex]);
+  
+  /* useEffects for animations */
   useEffect(() => {
     if(algoOptionsRef.current === null) return;
 
@@ -358,11 +388,9 @@ const Simulator = () => {
   }, [explanationMessage])
 
   useEffect(() => {
-    if(!Boolean(avgWT)) return; 
-    scroller.scrollTo('pieCharts', {
-      delay: 2000,
-      smooth: true,
-    });
+    if(!Boolean(avgWT)) return;
+
+    animateScrollToPieCharts()
 
     setAnimateAvgWT(true)
     const timeoutId = setTimeout(() => setAnimateAvgWT(false), 1000)
@@ -370,11 +398,9 @@ const Simulator = () => {
   }, [avgWT])
 
   useEffect(() => {
-    if(!Boolean(avgTAT)) return; 
-    scroller.scrollTo('pieCharts', {
-      delay: 2000,
-      smooth: true,
-    });
+    if(!Boolean(avgTAT)) return;
+
+    animateScrollToPieCharts()
 
     setAnimateAvgTAT(true)
     const timeoutId = setTimeout(() => setAnimateAvgTAT(false), 1000)
@@ -383,7 +409,7 @@ const Simulator = () => {
 
   // useEffect(() => console.log("data: ", data), [data])
 
-
+  
   return (
     <div className="text-white text-center">
       <h1 className="text-4xl">CPU Scheduling Simulator</h1>
@@ -413,7 +439,7 @@ const Simulator = () => {
         </div>
       </div>
 
-      {isRunning && <div className="mt-10 mx-10 flex flex-row text-2xl gap-24 items-center">
+      {isRunning && <Element name="explanationMsgSection" id="explanationMsgSection" className="mt-10 mx-10 flex flex-row text-2xl gap-24 items-center">
         {/* Current Time */}
         <div className="flex flex-row py-3 px-5 gap-4">
           <div className="flex flex-col group">
@@ -429,7 +455,7 @@ const Simulator = () => {
             {explanationMessage.map((msg, index) => <p key={index}> {msg} </p>)}
           </div>
         </div>
-      </div>}
+      </Element>}
 
       <div className="w-full flex flex-row pl-5 py-10 gap-16">
         {isRunning?
@@ -650,10 +676,10 @@ const Simulator = () => {
         </div>}
       </div>
 
-      {isRunning && <div className="py-10">
+      {isRunning && <div className="pb-10">
           {/* Gantt Chart */}
-          <div id="ganttChart" className="flex flex-col h-fit justify-center">
-            <Element name="ganttChart" className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Gantt Chart </Element>
+          <Element name="ganttChart" id="ganttChart" className="flex flex-col h-fit justify-center">
+            <h2 className="text-2xl border-b-2 uppercase py-2 px-4 mx-auto"> Gantt Chart </h2>
 
             <div className="flex flex-col py-5 px-10 gap-2">
               {ganttChartData.map((row, rowIndex) => {
@@ -698,7 +724,7 @@ const Simulator = () => {
                   )
               })}
             </div>
-          </div>
+          </Element>
 
           {/* Pie Charts */}
           {(currentStepIndex >= steps.length-2*noOfProcesses-3) &&
