@@ -9,6 +9,7 @@ import TeamCard from './TeamCard'
 import SpringButton from './SpringButton'
 import SignIn from './SignIn'
 import SignUp from './SignUp'
+import BookLoader from './BookLoader'
 
 export {
     ShinyButton,
@@ -21,5 +22,6 @@ export {
     TeamCard,
     SpringButton,
     SignIn,
-    SignUp
+    SignUp,
+    BookLoader
 }

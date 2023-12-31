@@ -1,4 +1,4 @@
-import { SignIn } from "..";
+import { SignIn, BookLoader } from "..";
 import { useUser, SignedOut, SignedIn } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
@@ -13,10 +13,10 @@ const API_URL = import.meta.env.VITE_OS_LAB_SIMULATOR_API_URL;
 const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData }) => {
   const [datasList, setDatasList] = useState([])
   const [isItemOpen, setIsItemOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [index, setIndex] = useState(-1)
   
-  const { user, isLoaded } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   if (!isLoaded) return null;
 
   const handleShowData = (ind) => {
@@ -44,8 +44,8 @@ const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData }) => 
   }
 
   useEffect(() => {
-    if(isVisible) handleLoad()
-  }, [isVisible])
+    if(isLoaded && isSignedIn && isVisible) handleLoad()
+  }, [isLoaded, isSignedIn, isVisible])
   
 
   return (
@@ -61,7 +61,9 @@ const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData }) => 
           <SignedIn>
             <div className="flex flex-col w-[600px] max-h-[80vh] rounded-xl text-xl p-6 gap-6 bg-white text-black overflow-y-auto">
               {isLoading?
-                <> Loading... </>
+                <div className="flex justify-center w-full">
+                  <BookLoader />
+                </div>
               : datasList.map(({ title, description, data }, index) => {
                 return (
                   <button

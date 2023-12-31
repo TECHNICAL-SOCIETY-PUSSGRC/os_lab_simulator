@@ -13,6 +13,8 @@ import { MdBookmarks } from "react-icons/md";
 import LoadAllInputsDialogueBox from "./LoadAllInputsDialogueBox"
 import SaveInputDialogueBox from "./SaveInputDialogueBox"
 import { Toaster } from "react-hot-toast"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Simulator = () => {
@@ -29,6 +31,22 @@ const Simulator = () => {
     { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
     { Header: 'Waiting Time (WT)', accessor: 'WT' },
   ], [])
+  const keyBindingsData = useMemo(() => [{
+    key: '<',
+    functionality: 'Prev',
+  },{
+    key: '>',
+    functionality: 'Next',
+  },{
+    key: 'Enter',
+    functionality: 'Show Final Result',
+  },{
+    key: 'Backspace',
+    functionality: 'Restart',
+  },{
+    key: 'Escape',
+    functionality: 'Edit',
+  }], [])
 
   const algoOptionsRef = useRef(null)
   const algoRef = useRef(null)
@@ -62,6 +80,7 @@ const Simulator = () => {
   const [tempNoOfProcesses, setTempNoOfProcesses] = useState(noOfProcesses)
   const [isVisibleSave, setIsVisibleSave] = useState(false)
   const [isVisibleLoad, setIsVisibleLoad] = useState(false)
+  const [isNotifAllowedBeforeRunning, setIsNotifAllowedBeforeRunning] = useState(true)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -172,16 +191,19 @@ const Simulator = () => {
     let steps = StepWiseFCFS(data)
     console.log(steps)
 
+    toast.dismiss()
     setIsRunning(true)
     setSteps(steps)
     
     handleAnimateOpacity()
   }
   const handleReset = () => {
+    setIsRunning(false)
+    setIsNotifAllowedBeforeRunning(false)
+
     setCurrentStepIndex(-1)
     setData([])
     setNoOfProcesses(0)
-    setIsRunning(false)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
     setQueue([{ Pid: 'Pid', AT: 'AT'}])
@@ -193,6 +215,8 @@ const Simulator = () => {
   }
   const handleEdit = () => {
     setIsRunning(false)
+    setIsNotifAllowedBeforeRunning(false)
+
     setCurrentStepIndex(-1)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
@@ -322,7 +346,6 @@ const Simulator = () => {
       if(!isRunning){
         if(e.key === 'Enter') handleRun()
       }else{
-    console.log(e.key)
         if(e.key === 'ArrowRight') handleNext()
         if(e.key === 'ArrowLeft') handlePrev()
         if(e.key === 'Enter') handleShowFinalResult()
@@ -336,6 +359,69 @@ const Simulator = () => {
       document.body.removeEventListener('keydown', handleKeyDown);
     };
   }, [isRunning, currentStepIndex]);
+
+  /* useEffect for showing info of keybindings via toaster */
+  useEffect(() => {
+    if(isRunning){
+      toast.info(
+        <div className="ml-2 mb-1 flex flex-col gap-1 justify-center">
+          <div className="flex flex-col text-center">
+            <span> Key Bindings are as follows: </span>
+            <span className="text-sm text-gray-300"> {'( Hover to pause )'} </span> 
+          </div>
+
+          {keyBindingsData.map(({key, functionality}, index) => {
+            return (
+              <div key={index} className="mt-3 flex items-center justify-between"> 
+                <span className="border px-2"> {key} </span>
+                &nbsp;:&nbsp;
+                <span> {functionality} </span>
+              </div>
+            )
+          })}
+        </div>, 
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          icon: false,
+          className: 'text-left'
+        }
+      );
+    }else{
+      if(!isNotifAllowedBeforeRunning) return;
+
+      toast.info('Welcome to OS Lab Simulator!', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        className: 'text-left'
+      });
+      toast.info('Press Enter for running the input and get started.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        delay: 1500,
+        className: 'text-left'
+      });
+    }
+  }, [isRunning])
+  
   
   /* useEffects for animations */
   useEffect(() => {
@@ -772,6 +858,18 @@ const Simulator = () => {
       />}
 
       <Toaster position="top-right" />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </div>
   )
 }
