@@ -75,7 +75,7 @@ const Simulator = () => {
   const [avgTAT, setAvgTAT] = useState(0.0)
   const [animateAvgWT, setAnimateAvgWT] = useState(false)
   const [animateAvgTAT, setAnimateAvgTAT] = useState(false)
-  const [ganttChartData, setGanttChartData] = useState([[]])
+  const [ganttChartData, setGanttChartData] = useState([])
   const [isEditingNoOfProcesses, setIsEditingNoOfProcesses] = useState(false)
   const [tempNoOfProcesses, setTempNoOfProcesses] = useState(noOfProcesses)
   const [isVisibleSave, setIsVisibleSave] = useState(false)
@@ -243,11 +243,16 @@ const Simulator = () => {
     setCurrentTime(curTime)
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)){
-      scroller.scrollTo('ganttChart', {
-        delay: 2000,
-        smooth: true,
-      });
-      setGanttChartData(newGanttChartData)
+      scroller.scrollTo('ganttChart', { delay: 2000, smooth: true });
+      const exec = () => {
+        const timeoutId = setTimeout(() => {
+          const timeoutId1 = setTimeout(() =>  setGanttChartData(newGanttChartData), 500)
+          const timeoutId2 = setTimeout(() => scroller.scrollTo('explanationMsgSection', { smooth: true }), 2000)
+          return () => { clearTimeout(timeoutId1); clearTimeout(timeoutId2); }
+        }, 2000)
+        return () => clearTimeout(timeoutId)
+      }
+      exec()
     }
 
     if(avgTAT !== newAvgTAT) setAvgTAT(newAvgTAT)
@@ -343,8 +348,12 @@ const Simulator = () => {
   /* useEffect for binding keys */
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const inputElement = document.getElementById('noOfProcesses')
       if(!isRunning){
-        if(e.key === 'Enter') handleRun()
+        if(e.key === 'Enter'){
+          if (document.activeElement === inputElement) handleEditNoOfProcesses()
+          else handleRun();
+        }
       }else{
         if(e.key === 'ArrowRight') handleNext()
         if(e.key === 'ArrowLeft') handlePrev()
@@ -358,7 +367,18 @@ const Simulator = () => {
     return () => {
       document.body.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRunning, currentStepIndex]);
+  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses]);
+
+  /* Writing down a bug here that can arise in future. */ 
+  /*  
+    The useEffect for binding keys adds an eventListener caches up the whole function even cache the variable values
+    
+    Problem that can arise: when you keyPress, it will call the function with the cached values and those values are may not be the actual updated value, in case you updated it meanwhile without refershing the useEffect.
+
+    Solution: add the state in the useEffect due to which you are encountering that bug. It will result in refreshing the keybindings caches whenever the dependencies get updated, resulting in caching the updated values and preventing the bug from happening again. 
+
+    I can do the same right now, adding all the dependencies here in the useEffect, but its not necessary now and may also be very ineffiecient so not doing that for now.
+  */
 
   /* useEffect for showing info of keybindings via toaster */
   useEffect(() => {
@@ -595,6 +615,7 @@ const Simulator = () => {
                 : <>
                   <input 
                     type="number"
+                    id="noOfProcesses"
                     name="noOfProcesses"
                     min={1}
                     placeholder={noOfProcesses}
