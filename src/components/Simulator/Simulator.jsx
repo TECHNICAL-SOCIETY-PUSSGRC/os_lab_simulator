@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo, componentDidMount, componentWillUnmount } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { ShinyButton } from '..'
-import { SampleData, StepWiseFCFS, createColorSchemes } from './data'
+import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
@@ -15,6 +15,7 @@ import SaveInputDialogueBox from "./SaveInputDialogueBox"
 import { Toaster } from "react-hot-toast"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ImportJsonDialogueBox from "./ImportJsonDialogueBox"
 
 
 const Simulator = () => {
@@ -59,7 +60,7 @@ const Simulator = () => {
   const [isRunning, setIsRunning] = useState(false)
   const [animateShine, setAnimateShine] = useState(false)
   const [animateOpacity, setAnimateOpacity] = useState(false)
-  const [queue, setQueue] = useState([{ Pid: 'Pid', AT: 'AT'}])
+  const [queue, setQueue] = useState([{ Pid: 'Pid', AT: 'AT', BT: 'BT'}])
   const [stack, setStack] = useState(['Pid'])
   const [cpu, setCPU] = useState({Pid: 'Pid', RT: 'RT'})
   const [currentTime, setCurrentTime] = useState(0)
@@ -81,6 +82,7 @@ const Simulator = () => {
   const [isVisibleSave, setIsVisibleSave] = useState(false)
   const [isVisibleLoad, setIsVisibleLoad] = useState(false)
   const [isNotifAllowedBeforeRunning, setIsNotifAllowedBeforeRunning] = useState(true)
+  const [isVisibleImport, setIsVisibleImport] = useState(false)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -181,14 +183,20 @@ const Simulator = () => {
       process.BT = (process.BT === '')? 0: parseInt(process.BT)
       
       // filling default data
-      process.CT = process.TAT = process.WT = null 
+      process.CT = process.TAT = process.WT = process.RT = null 
       process.bgColor = {
         Pid: 'transparent', AT: 'transparent', BT: 'transparent', CT: 'transparent', TAT: 'transparent', WT: 'transparent'
       }
       process.color = newColorSchemes[index]
     })
 
-    let steps = StepWiseFCFS(data)
+    const getSteps = () => {
+      if(algo == 'FCFS') return StepWiseFCFS(data)
+      // if(algo == 'SJF') 
+        return StepWiseSJF(data)
+    }
+
+    let steps = getSteps()
     console.log(steps)
 
     toast.dismiss()
@@ -206,7 +214,7 @@ const Simulator = () => {
     setNoOfProcesses(0)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
     setStack(['Pid'])
     setExplanationMessage([''])
     setAvgTAT(0.0)
@@ -268,7 +276,7 @@ const Simulator = () => {
       setExplanationMessage([''])
       setCurrentTime(0)
       setCPU({ Pid: 'Pid', RT: 'RT'})
-      setQueue([{ Pid: 'Pid', AT: 'AT'}])
+      setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
       setStack(['Pid'])
       return;
     }
@@ -328,7 +336,7 @@ const Simulator = () => {
     setExplanationMessage([''])
     setCurrentTime(0)
     setCPU({ Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
     setStack(['Pid'])
     setGanttChartData([])
     setAvgWT(0.0)
@@ -367,7 +375,7 @@ const Simulator = () => {
     return () => {
       document.body.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses]);
+  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses, algo]);
 
   /* Writing down a bug here that can arise in future. */ 
   /*  
@@ -375,7 +383,7 @@ const Simulator = () => {
     
     Problem that can arise: when you keyPress, it will call the function with the cached values and those values are may not be the actual updated value, in case you updated it meanwhile without refershing the useEffect.
 
-    Solution: add the state in the useEffect due to which you are encountering that bug. It will result in refreshing the keybindings caches whenever the dependencies get updated, resulting in caching the updated values and preventing the bug from happening again. 
+    Solution: add the state in the useEffect dependency array due to which you are encountering that bug. It will result in refreshing the keybindings caches whenever the dependencies get updated, resulting in caching the updated values and preventing the bug from happening again. 
 
     I can do the same right now, adding all the dependencies here in the useEffect, but its not necessary now and may also be very ineffiecient so not doing that for now.
   */
@@ -585,12 +593,12 @@ const Simulator = () => {
               <h2 className="text-2xl border-b-2 py-2 uppercase tracking-wide">Queue</h2>
               <div className="flex flex-col py-3 gap-3 text-xl">
                 {
-                  queue.map(({ Pid, AT}, index) => {
+                  queue.map(({ Pid, AT, BT }, index) => {
                     return (
                       <div key={index} className={`flex flex-row items-center justify-evenly text-xl transition-opacity duration-1000 ease-in-out ${isQueueEmpty? 'opacity-0': 'opacity-100'}`}>
-                        <span> {Pid} </span>
-                        <span> : </span>
-                        <span> {AT} </span>
+                        <span> {Pid} </span>:
+                        <span> {AT} </span>, 
+                        <span> {BT} </span>
                       </div>
                     )
                   })
@@ -758,17 +766,25 @@ const Simulator = () => {
             </div>
           </>
           :  /* Simulator Buttons Section Before Running */
-          <div className="flex flex-row gap-5 w-full justify-end mt-5 pr-10">
+          <div className="flex flex-row w-full justify-between mt-5 pr-10">
             <ShinyButton 
               className="text-xl border px-3 py-2"
-              text="Reset"
-              onClick={handleReset}
+              text="Import JSON file"
+              onClick={() => setIsVisibleImport(true)}
             />
-            <ShinyButton 
-              className="text-xl border px-3"
-              text="Run"
-              onClick={handleRun}
-            />
+
+            <div className="flex flex-row gap-5">
+              <ShinyButton 
+                className="text-xl border px-3 py-2"
+                text="Reset"
+                onClick={handleReset}
+              />
+              <ShinyButton 
+                className="text-xl border px-3"
+                text="Run"
+                onClick={handleRun}
+              />
+            </div>
           </div>}
         </div>
         
@@ -876,7 +892,15 @@ const Simulator = () => {
         isVisible={isVisibleLoad} 
         handleClick={() => setIsVisibleLoad(false)}
         setData={setData}
+        setNoOfProcesses={setNoOfProcesses}
       />}
+
+      <ImportJsonDialogueBox 
+        isVisible={isVisibleImport}
+        handleClick={() => setIsVisibleImport(false)}
+        setData={setData}
+        setNoOfProcesses={setNoOfProcesses}
+      />
 
       <Toaster position="top-right" />
       <ToastContainer

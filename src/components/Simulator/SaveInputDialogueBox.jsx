@@ -23,6 +23,8 @@ const SaveDialogueBox = ({ isVisible=false, handleClick, data }) => {
       const res = await axios.post(`${API_URL}/saveInputData/${userName}`, newInputData)
       handleClick()
 
+      setTitle('')
+      setDescription('')
       return res.data.msg
     } catch (error) {
       console.log(error)

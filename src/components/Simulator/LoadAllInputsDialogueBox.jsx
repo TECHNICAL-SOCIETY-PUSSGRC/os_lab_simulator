@@ -10,7 +10,7 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_OS_LAB_SIMULATOR_API_URL;
 
 
-const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData }) => {
+const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData, setNoOfProcesses }) => {
   const [datasList, setDatasList] = useState([])
   const [isItemOpen, setIsItemOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +103,7 @@ const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData }) => 
               refreshList={handleLoad}
               setData={setData}
               handleParentClick={handleClick}
+              setNoOfProcesses={setNoOfProcesses}
             />}
           </SignedIn>
         </div>

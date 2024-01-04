@@ -1,5 +1,5 @@
 import { toast } from "react-hot-toast";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Table } from '.';
 import axios from "axios";
 import ShinyButton from "../ShinyButton";
@@ -7,7 +7,7 @@ import ShinyButton from "../ShinyButton";
 const API_URL = import.meta.env.VITE_OS_LAB_SIMULATOR_API_URL;
 
 
-const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: curTitle, description: curDescription, data: curData, index, refreshList, setData: setCurData, handleParentClick }) => {
+const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: curTitle, description: curDescription, data: curData, index, refreshList, setData: setCurData, handleParentClick, setNoOfProcesses }) => {
   const columns = useMemo(() => [
     { Header: 'Process ID (Pid)', accessor: 'Pid' },
     { Header: 'Arrival Time (AT)', accessor: 'AT'},
@@ -67,8 +67,13 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
   }
   const handleImport = () => {
     setCurData(data)
+    setNoOfProcesses(data.length)
     handleClick()
     handleParentClick()
+  }
+  const handleCopy = () => {
+    navigator.clipboard.writeText(JSON.stringify(data))
+    toast.success('Copied to clipboard!')
   }
 
 
@@ -127,11 +132,19 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
                 }
               </div>
 
-              <ShinyButton className="text-xl border border-black px-3 py-2 bg-blue-300" onClick={handleImport}>
-                Import
-              </ShinyButton>
-            </div>
+              <div className='flex flex-row gap-3'>
+                <ShinyButton 
+                  className="text-xl border border-black px-3 py-2 bg-violet-300" 
+                  onClick={handleCopy}
+                >
+                  Copy
+                </ShinyButton>
 
+                <ShinyButton className="text-xl border border-black px-3 py-2 bg-blue-300" onClick={handleImport}>
+                  Import
+                </ShinyButton>
+              </div>
+            </div>
           </div>
       </div>
     </div>

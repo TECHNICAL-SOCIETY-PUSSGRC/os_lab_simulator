@@ -53,7 +53,7 @@ export const FCFS = (data) => {
       cpu = queue.shift()
       cpuProcessCT = processData.AT + cpu.BT // new cpuProcessCT
       cpu.CT = cpuProcessCT
-    } else{
+    } else {
       // cpu is busy so wait for it to get free
       curTime = processData.AT
       queue.push(processData)
@@ -291,4 +291,199 @@ export const createColorSchemes = (noOfProcesses) => {
     colors.push(color);
   }
   return colors;
+}
+
+
+export const StepWiseSJF = (data) => {
+  data = createCopyJSON(data) // so that original data is not modified
+
+  let newData = data.map((processData, index) => {
+    return ({
+      ...processData,
+      originalIndex: index,
+    })
+  })
+  newData.sort((a, b) => a.AT - b.AT)
+  
+  
+  let cpu = {}, queue = [], completed = [], steps = []
+  let cpuProcessCT = -1 // required time units count at which process that is currently running in cpu will be completed
+  let curTime = 0 // current time units count
+  let timeGap = 0, prevRT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
+  let avgTAT = 0.0, avgWT = 0.0;
+
+  const updateData = (newData) => data[newData.originalIndex] = newData
+  const pushInSteps = (msg) => {
+    steps.push({
+      cpu: createCopyJSON(cpu),
+      queue: createCopyJSON(queue),
+      completed: createCopyJSON(completed),
+      curTime,
+      data: createCopyJSON(data),
+      msg,
+      avgTAT,
+      avgWT,
+      ganttChartData: []
+    })
+
+    let newGanttChartData = createGanttChartData(steps)
+    steps[steps.length - 1].ganttChartData = newGanttChartData;
+  }
+  const executeProcess = () => {
+    prevRT = cpu.RT
+    cpu.RT = cpuProcessCT - curTime
+    timeGap = prevRT - cpu.RT
+
+    if(! cpu.RT){
+      // that means the process has completed
+      cpu.CT = curTime
+      updateData(cpu)
+    }
+  }
+  const completeCurrentProcess = () => {
+    curTime = cpuProcessCT
+    executeProcess()
+    
+    completed.push(cpu.Pid)
+    let completedProcessID = cpu.Pid
+    cpu = {}
+    pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
+  }
+  const pushIntoQueue = (processData) => {
+    curTime = processData.AT
+    queue.push(processData)
+
+    let isExecuted = ! compareArraysOrJSONs(cpu, {})
+    if(isExecuted){
+      // this means that cpu had a process running in it so lets execute the process
+      executeProcess()
+    }
+
+    pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevRT} (RT) - ${timeGap} (timeGap) = ${cpu.RT} time unit.`: ''}`)
+  }
+  const getNextProcessToAssignFromQueue = () => {
+    // Find the process with the minimum BT value in the queue
+    let minBTProcess = queue[0];
+    queue.map((processData) => {
+      if(processData.BT < minBTProcess.BT) minBTProcess = processData;
+    })
+
+    // Remove the minBTProcess from the queue
+    queue = queue.filter((processData) => processData !== minBTProcess);
+    
+    return minBTProcess;
+  }
+  const assignProcessToCPU = () => {
+    if(! queue.length){
+      console.log("Cannot assign process to cpu: Queue is Emtpy");
+      return;
+    }
+
+    // Highlighting the orginal Indexes of the elements present in queue
+    let originalIndexes = []
+    queue.map((processData) => originalIndexes.push(processData.originalIndex))
+    originalIndexes.map((index) => {
+      data[index].bgColor = {
+        BT: 'rgba(96, 130, 182, 0.6)'
+      }
+    })
+
+    cpu = getNextProcessToAssignFromQueue()
+    cpu.bgColor = { BT: 'rgba(0, 143, 90, 0.6)' }
+    updateData(cpu)
+
+    cpuProcessCT = curTime + cpu.BT
+    executeProcess()
+    pushInSteps(`At ${curTime} time unit, CPU is free.\nThe process with min. BT value among all other processes in queue is ${cpu.Pid}, with BT: ${cpu.BT}.\nHence, Process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of P1).`)
+
+    // resetting highlightning back to normal
+    originalIndexes.map((index) => {
+      data[index].bgColor = {
+        BT: 'transparent'
+      }
+    })
+  }
+
+
+  newData.map((processData) => {
+    if(processData.AT >= cpuProcessCT) {
+      if(cpuProcessCT !== -1) {
+        // this means that cpu really had a process running in it and its completed now
+        completeCurrentProcess()
+      }
+      // cpu is free now
+
+      // adding the process to queue, so that when cpu gets free, it can pick up the process from queue
+      pushIntoQueue(processData)
+
+      // there are processes in the queue, so pick up the first one and assign it to cpu
+      assignProcessToCPU()
+    } else{
+      // cpu is busy so wait for it to get free
+      pushIntoQueue(processData)
+    }
+  })
+
+
+  // executing the remaining processes in the queue
+  while(queue.length){
+    completeCurrentProcess()
+    assignProcessToCPU()
+  }
+  // considering the last process that was running in cpu
+  if(cpuProcessCT !== -1) {
+    completeCurrentProcess()
+  }
+
+
+  // calcualting TAT and WT
+  data.map((process) => {
+    process.TAT = process.CT - process.AT
+    process.bgColor = {
+      TAT: 'rgba(0, 143, 90, 0.6)',
+      CT: 'rgba(96, 130, 182, 0.6)',
+      AT: 'rgba(96, 130, 182, 0.6)'
+    }
+
+    pushInSteps(`Process ${process.Pid} is executed till ${process.CT} time unit (CT).\nProcess ${process.Pid} arrived at ${process.AT} time unit (AT).\nTurn Around Time, TAT = CT - AT.\nTAT of ${process.Pid}: ${process.CT} - ${process.AT} = ${process.TAT}`)
+
+    // resetting bgColor to transparent
+    process.bgColor = {
+      TAT: 'transparent', CT: 'transparent', AT: 'transparent'
+    }
+  })
+  data.map((process) => {
+    process.WT = process.TAT - process.BT
+    process.bgColor = {
+      WT: 'rgba(0, 143, 90, 0.6)',
+      TAT: 'rgba(96, 130, 182, 0.6)',
+      BT: 'rgba(96, 130, 182, 0.6)'
+    }
+
+    pushInSteps(`Turn Around Time of Process ${process.Pid} is ${process.TAT} time unit (TAT).\nBurst Time of Process ${process.Pid} is ${process.BT} time unit (BT).\nWaiting Time, WT = TAT - BT.\nWT of ${process.Pid}: ${process.CT} - ${process.AT} = ${process.TAT}`)
+    
+    // resetting bgColor to transparent
+    process.bgColor = {
+      WT: 'transparent', TAT: 'transparent', BT: 'transparent'
+    }
+  })
+
+  data.map((process) => {
+    process.bgColor = {
+      TAT: 'rgba(96, 130, 182, 0.6)'
+    }
+  })
+  avgTAT = (data.reduce((acc, cur) => acc + cur.TAT, 0) / data.length).toFixed(2)
+  pushInSteps(`All the processes are completed.\nAverage TAT: ${avgTAT}`)
+  
+  data.map((process) => {
+    process.bgColor = {
+      TAT: 'transparent',
+      WT: 'rgba(96, 130, 182, 0.6)'
+    }
+  })
+  avgWT = (data.reduce((acc, cur) => acc + cur.WT, 0) / data.length).toFixed(2)
+  pushInSteps(`Average WT: ${avgWT}`)
+  
+  return steps;
 }
