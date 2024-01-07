@@ -72,7 +72,12 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
     handleParentClick()
   }
   const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(data))
+    const copyData = data.map((process) => {
+      return { 
+        Pid: process.Pid, AT: process.AT, BT: process.BT
+      }
+    })
+    navigator.clipboard.writeText(JSON.stringify(copyData))
     toast.success('Copied to clipboard!')
   }
 

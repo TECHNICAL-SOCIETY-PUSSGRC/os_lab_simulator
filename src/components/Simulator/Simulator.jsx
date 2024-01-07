@@ -228,7 +228,7 @@ const Simulator = () => {
     setCurrentStepIndex(-1)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT'}])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT'}])
     setStack(['Pid'])
     setExplanationMessage([''])
     setAvgTAT(0.0)
