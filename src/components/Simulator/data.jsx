@@ -518,6 +518,11 @@ export const StepWiseSRJF = (data) => {
   let avgTAT = 0.0, avgWT = 0.0;
   let minBTProcess = { Pid: null, BT: Number.MAX_SAFE_INTEGER }; // process with min BT in the queue
 
+  // Notes:
+  // 1) whenever updates the queue, update the minBTProcess accordingly, always
+  // 2) whenever updates the cpu, update the cpuProcess time always, for data consistency
+  // 3) do not forget to remove highlighting after implementing it
+
   const updateData = (newData) => data[newData.originalIndex] = newData
   const pushInSteps = (msg) => {
     steps.push({
@@ -574,12 +579,8 @@ export const StepWiseSRJF = (data) => {
 
     return nextProcess;
   }
-  const assignProcessToCPU = () => {
-    if(! queue.length){
-      // console.log("Cannot assign process to cpu: Queue is Emtpy");
-      cpuProcessCT = -1
-      return;
-    }
+  const getAndHighlightNextProcess = () => {
+    if(!queue.length) return;
 
     // Highlighting the orginal Indexes of the elements present in queue
     let originalIndexes = []
@@ -634,6 +635,17 @@ export const StepWiseSRJF = (data) => {
       minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen${minATMsg}`
     }
 
+    return { nextProcess, minMsg }
+  }
+  const assignProcessToCPU = () => {
+    if(! queue.length){
+      // console.log("Cannot assign process to cpu: Queue is Emtpy");
+      cpuProcessCT = -1
+      return;
+    }
+
+    // getting the next process while highlighting the steps
+    let { nextProcess, minMsg} = getAndHighlightNextProcess()
     cpu = nextProcess
     updateData(cpu)
 
@@ -642,85 +654,296 @@ export const StepWiseSRJF = (data) => {
     pushInSteps(`At ${curTime} time unit, CPU is free.\n${minMsg}\nHence, Process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of P1).`)
 
     // resetting highlightning back to normal
-    originalIndexes.map((index) => {
-      data[index].bgColor = {
-        AT: 'transparent', BT: 'transparent'
+    data.map((process) => {
+      process.bgColor = {
+        Pid: 'transparent', AT: 'transparent', BT: 'transparent'
       }
     })
   }
-  const checkForPrempt = () => {
-    if(!cpu?.Pid || cpu.BT <= minBTProcess.BT) return;
-    // else premption is needed
+  const handlePremption = () => {
+    if(!queue.length) return;
 
     let preemptedProcess = cpu
-    cpu = getNextProcessToAssignFromQueue()
+
+    // getting the next process while highlighting the steps
+    cpu = getAndHighlightNextProcess().nextProcess
     cpuProcessCT = curTime + cpu.BT
     
+    // updating the queue and the minBTProcess
     queue.push(preemptedProcess)
     findMinBTProcess()
 
     // highlighting the preempted and the current cpu process
-    data[preemptedProcess.originalIndex].bgColor = { Pid: highlightColor }
-    data[cpu.originalIndex].bgColor = { Pid: highlightResultColor, AT: highlightResultColor, BT: highlightResultColor }
+    preemptedProcess.bgColor = { Pid: highlightColor }
+    updateData(preemptedProcess)
+
+    cpu.bgColor = { Pid: highlightResultColor, AT: highlightResultColor, BT: highlightResultColor }
+    updateData(cpu)
+    
 
     pushInSteps(`At ${curTime} time unit, Process ${preemptedProcess.Pid} is preempted from CPU and added to Queue again and process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${preemptedProcess.Pid}: ${prevBT} - ${timeGap} (timeGap) = ${preemptedProcess.BT} time unit.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid}).`)
 
-    // resetting the highlighting back to normal
-    data[preemptedProcess.originalIndex].bgColor = { BT: 'transparent' }
-    data[cpu.originalIndex].bgColor = { AT: 'transparent', BT: 'transparent' }
+    // resetting highlightning back to normal
+    data.map((process) => {
+      process.bgColor = {
+        Pid: 'transparent', AT: 'transparent', BT: 'transparent'
+      }
+    })
   }
-  const completeCurrentProcess = () => {
+  const checkForPrempt = () => {
+    if(!cpu?.Pid || !queue.length || cpu.BT <= minBTProcess.BT) return;
+    // else premption is needed
+
+    handlePremption()
+  }
+  const completeCurrentProcessExecution = () => {
     if (! cpu?.Pid) {
       // console.log('Cannot complete current process: CPU is empty')
       return;
     }
 
-    let cpuBT = cpu.BT
-    curTime += Math.min(cpuBT, minBTProcess.BT)
+    let oldCPUBT = cpu.BT
+    curTime += Math.min(oldCPUBT, minBTProcess.BT)
     executeProcess() // will change the cpu.BT according to the curTime
     
-    if (cpuBT <= minBTProcess.BT) {
+    if (oldCPUBT <= minBTProcess.BT) {
       // means the cpu process is completely executed
       completed.push(cpu.Pid)
       let completedProcessID = cpu.Pid
       cpu = {}
       pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
-    } else {
+    } else if(queue.length) {
       // this means that the process that is currently running in cpu is not the one with min BT value
       // so we need to preempt the current process and assign the process with min BT value to cpu
-      checkForPrempt()
+      handlePremption()
     }
   }
 
 
   newData.map((processData) => {
     while(cpu?.Pid && curTime + Math.min(cpu.BT, minBTProcess.BT) < processData.AT){
-      // this means that cpu had a process running in it and its completed now
-      completeCurrentProcess()
+      // this means that cpu had a process running in it
+      completeCurrentProcessExecution()
 
-      // cpu is free now so can assign new process to it
-      assignProcessToCPU()
+      // if cpu is free now then can assign new process to it
+      if(!cpu?.Pid) assignProcessToCPU()
     }
 
     // adding the process to queue
     pushIntoQueue(createCopyJSON(processData))
 
     checkForPrempt()
-    if (! cpu?.Pid) { 
-      // means cpu is free so assign the next process
-      assignProcessToCPU() 
-    }
+    // if cpu is free now then assign new process to it
+    if(!cpu?.Pid) assignProcessToCPU()
   })
 
   // executing the remaining processes in the queue
   while(queue.length){
-    completeCurrentProcess()
-    assignProcessToCPU()
+    completeCurrentProcessExecution()
+    if(!cpu?.Pid) assignProcessToCPU()
   }
   // considering the last process that was running in cpu
-  if(cpu?.Pid) {
-    completeCurrentProcess()
+  if(cpu?.Pid) completeCurrentProcessExecution()
+
+  // resetting the BT for all the processes for calculating the TAT and WT correctly.
+  newData.map((process) => data[process.originalIndex].BT = process.BT)
+
+  // calcualting TAT and WT
+  data.map((process) => {
+    process.TAT = process.CT - process.AT
+    process.bgColor = {
+      TAT: highlightResultColor,
+      CT: highlightColor,
+      AT: highlightColor
+    }
+
+    pushInSteps(`Process ${process.Pid} is executed till ${process.CT} time unit (CT).\nProcess ${process.Pid} arrived at ${process.AT} time unit (AT).\nTurn Around Time, TAT = CT - AT.\nTAT of ${process.Pid}: ${process.CT} - ${process.AT} = ${process.TAT}`)
+
+    // resetting bgColor to transparent
+    process.bgColor = {
+      TAT: 'transparent', CT: 'transparent', AT: 'transparent'
+    }
+  })
+  data.map((process) => {
+    process.WT = process.TAT - process.BT
+    process.bgColor = {
+      WT: highlightResultColor,
+      TAT: highlightColor,
+      BT: highlightColor
+    }
+
+    pushInSteps(`Turn Around Time of Process ${process.Pid} is ${process.TAT} time unit (TAT).\nBurst Time of Process ${process.Pid} is ${process.BT} time unit (BT).\nWaiting Time, WT = TAT - BT.\nWT of ${process.Pid}: ${process.CT} - ${process.AT} = ${process.TAT}`)
+    
+    // resetting bgColor to transparent
+    process.bgColor = {
+      WT: 'transparent', TAT: 'transparent', BT: 'transparent'
+    }
+  })
+
+  data.map((process) => {
+    process.bgColor = {
+      TAT: highlightColor
+    }
+  })
+  avgTAT = (data.reduce((acc, cur) => acc + cur.TAT, 0) / data.length).toFixed(2)
+  pushInSteps(`All the processes are completed.\nAverage TAT: ${avgTAT}`)
+  
+  data.map((process) => {
+    process.bgColor = {
+      TAT: 'transparent',
+      WT: highlightColor
+    }
+  })
+  avgWT = (data.reduce((acc, cur) => acc + cur.WT, 0) / data.length).toFixed(2)
+  pushInSteps(`Average WT: ${avgWT}`)
+  
+  return steps;
+}
+
+export const StepWiseRR = (data, timeQuantum) => {
+  data = createCopyJSON(data) // so that original data is not modified
+
+  let newData = data.map((processData, index) => {
+    return ({
+      ...processData,
+      originalIndex: index,
+    })
+  })
+  newData.sort((a, b) => a.AT - b.AT)
+  
+  
+  let cpu = {}, queue = [], completed = [], steps = []
+  let cpuProcessCT = -1 // required time units count at which process that is currently running in cpu will be completed
+  let curTime = 0 // current time units count
+  let timeGap = 0, prevBT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
+  let avgTAT = 0.0, avgWT = 0.0;
+  let cpuRTS = timeQuantum // time required to pass before switching / prempting
+
+  // Note:
+  // 1) while assigning new process to the cpu, keep in mind to update the cpuRTS at the same time.
+
+  const updateData = (newData) => data[newData.originalIndex] = newData
+  const pushInSteps = (msg) => {
+    steps.push({
+      cpu: createCopyJSON(cpu),
+      queue: createCopyJSON(queue),
+      completed: createCopyJSON(completed),
+      curTime,
+      data: createCopyJSON(data),
+      msg,
+      avgTAT,
+      avgWT,
+      ganttChartData: []
+    })
+
+    let newGanttChartData = createGanttChartData(steps)
+    steps[steps.length - 1].ganttChartData = newGanttChartData;
   }
+  const executeProcess = () => {
+    prevBT = cpu.BT
+    cpu.RT = cpu.BT = cpuProcessCT - curTime
+    timeGap = prevBT - cpu.BT
+
+    if(! cpu.BT){
+      // that means the process has completed
+      cpu.CT = curTime
+    }
+    updateData(cpu)
+  }
+  const pushIntoQueue = (processData) => {
+    let oldCurTime = curTime
+    curTime = processData.AT
+    queue.push(processData)
+
+    let isExecuted = ! compareArraysOrJSONs(cpu, {})
+    if(isExecuted){
+      // this means that cpu had a process running in it so lets execute the process
+      executeProcess()
+          
+      // updating the cpuRTS accordingly wiht the time passed
+      cpuRTS -= processData.AT - oldCurTime; // cannot be negative
+    }
+
+    pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevBT} - ${timeGap} (timeGap) = ${cpu.BT} time unit.`: ''}`)
+  }
+  const getNextProcessToAssignFromQueue = () => {
+    return queue.shift()
+  }
+  const assignProcessToCPU = () => {
+    if(! queue.length){
+      // console.log("Cannot assign process to cpu: Queue is Emtpy");
+      cpuProcessCT = -1
+      return;
+    }
+
+    cpu = getNextProcessToAssignFromQueue()
+    cpuProcessCT = curTime + cpu.BT
+    cpuRTS = timeQuantum
+    executeProcess()
+    pushInSteps(`At ${curTime} time unit, CPU is free so Process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of P1).`)
+  }
+  const handlePremption = () => {
+    let preemptedProcess = cpu
+    let oldPrevBT = prevBT, oldTimeGap = timeGap
+
+    cpu = getNextProcessToAssignFromQueue()
+    cpuProcessCT = curTime + cpu.BT
+    cpuRTS = timeQuantum
+    executeProcess()
+    queue.push(preemptedProcess)
+
+    // highlighting the preempted and the current cpu process
+    data[preemptedProcess.originalIndex].bgColor = { Pid: highlightColor }
+    data[cpu.originalIndex].bgColor = { Pid: highlightResultColor }
+
+    pushInSteps(`At ${curTime} time unit, Process ${preemptedProcess.Pid} is preempted from CPU and added to Queue again and process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${preemptedProcess.Pid}: ${oldPrevBT} - ${oldTimeGap} (timeGap) = ${preemptedProcess.BT} time unit.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid}).`)
+
+    // resetting the highlighting back to normal
+    data[preemptedProcess.originalIndex].bgColor = { Pid: 'transparent' }
+    data[cpu.originalIndex].bgColor = { Pid: 'transparent' }
+  }
+  const completeCurrentProcessExecution = () => {
+    if (! cpu?.Pid) return;
+
+    curTime += Math.min(cpu.BT, cpuRTS)
+    executeProcess()
+
+    if (! cpu.BT) {
+      // completely execute the process
+      completed.push(cpu.Pid)
+      let completedProcessID = cpu.Pid
+      cpu = {}
+      pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
+    } else if(queue.length) {
+      // complete till the next limit and preempt the process
+      handlePremption()
+    } else {
+      // this means that there is a single process that is running in the cpu
+      pushInSteps(`Premption is not possible so repeating the same process for timeQuantum time again.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid})`)
+    }
+  }
+
+
+  newData.map((processData) => {
+    while(cpu?.Pid && curTime + Math.min(cpu.BT, cpuRTS) < processData.AT){
+      completeCurrentProcessExecution()
+      if(!cpu?.Pid) assignProcessToCPU()
+    }
+
+    // adding the process to queue
+    pushIntoQueue(createCopyJSON(processData))
+
+    // if cpu is free now then assign new process to it
+    if (! cpu?.Pid) assignProcessToCPU()
+  })
+
+  // // executing the remaining processes in the queue
+  while(queue.length){
+    completeCurrentProcessExecution()
+    if(!cpu?.Pid) assignProcessToCPU()
+  }
+  // considering the last process that was running in cpu
+  while(cpu?.Pid) completeCurrentProcessExecution()
 
   // resetting the BT for all the processes for calculating the TAT and WT correctly.
   newData.map((process) => data[process.originalIndex].BT = process.BT)

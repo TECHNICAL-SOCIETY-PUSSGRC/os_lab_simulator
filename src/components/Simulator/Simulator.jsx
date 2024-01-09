@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { ShinyButton } from '..'
-import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF, StepWiseSRJF } from './data'
+import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF, StepWiseSRJF, StepWiseRR } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
@@ -83,6 +83,7 @@ const Simulator = () => {
   const [isVisibleLoad, setIsVisibleLoad] = useState(false)
   const [isNotifAllowedBeforeRunning, setIsNotifAllowedBeforeRunning] = useState(true)
   const [isVisibleImport, setIsVisibleImport] = useState(false)
+  const [timeQuantum, setTimeQuantum] = useState(2)
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -152,12 +153,12 @@ const Simulator = () => {
     handleAnimateOpacity()
   }
   const handleFillRandomData = () => {
-    const newData = []
+    const newData = [], limit = 10
     for(let i=0; i<noOfProcesses; i++){
       newData.push({
         Pid: "P" + (i+1),
-        AT: Math.floor(Math.random() * 10),
-        BT: Math.floor(Math.random() * 10)
+        AT: Math.floor(Math.random() * limit),
+        BT: Math.floor(Math.random() * limit)
       })
     }
     setData(newData)
@@ -194,6 +195,7 @@ const Simulator = () => {
       if(algo === 'FCFS') return StepWiseFCFS(data)
       if(algo === 'SJF') return StepWiseSJF(data)
       if(algo === 'SRJF') return StepWiseSRJF(data)
+      if(algo === 'RR') return StepWiseRR(data, timeQuantum)
       toast.error('Simulation not implemented yet, Coming Soon!')
     }
 
@@ -600,7 +602,9 @@ const Simulator = () => {
                     return (
                       <div key={index} className={`flex flex-row items-center justify-evenly text-xl transition-opacity duration-1000 ease-in-out ${isQueueEmpty? 'opacity-0': 'opacity-100'}`}>
                         <span> {Pid} </span>:
-                        <span> {AT} </span>, 
+                        {algo !=='RR' && <>
+                          <span> {AT} </span>,
+                        </>}
                         <span> {BT} </span>
                       </div>
                     )
