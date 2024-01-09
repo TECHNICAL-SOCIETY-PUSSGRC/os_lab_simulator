@@ -1,18 +1,18 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { ShinyButton } from '..'
-import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF } from './data'
+import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF, StepWiseSRJF } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
 import { InView } from 'react-intersection-observer'
-import { Element, scroller, animateScroll } from 'react-scroll';
+import { Element, scroller } from 'react-scroll';
 import { TbEdit } from "react-icons/tb";
 import { MdOutlineDoneOutline } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import { MdBookmarks } from "react-icons/md";
 import LoadAllInputsDialogueBox from "./LoadAllInputsDialogueBox"
 import SaveInputDialogueBox from "./SaveInputDialogueBox"
-import { Toaster } from "react-hot-toast"
+import { Toaster, toast as toastifyToast } from "react-hot-toast"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ImportJsonDialogueBox from "./ImportJsonDialogueBox"
@@ -191,12 +191,14 @@ const Simulator = () => {
     })
 
     const getSteps = () => {
-      if(algo == 'FCFS') return StepWiseFCFS(data)
-      // if(algo == 'SJF') 
-        return StepWiseSJF(data)
+      if(algo === 'FCFS') return StepWiseFCFS(data)
+      if(algo === 'SJF') return StepWiseSJF(data)
+      if(algo === 'SRJF') return StepWiseSRJF(data)
+      toast.error('Simulation not implemented yet, Coming Soon!')
     }
 
     let steps = getSteps()
+    if(!steps) return;
     console.log(steps)
 
     toast.dismiss()
@@ -225,6 +227,7 @@ const Simulator = () => {
     setIsRunning(false)
     setIsNotifAllowedBeforeRunning(false)
 
+    setData(steps[0].data)
     setCurrentStepIndex(-1)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})

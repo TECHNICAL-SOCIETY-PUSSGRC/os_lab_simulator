@@ -38,11 +38,13 @@ export const createColorSchemes = (noOfProcesses) => {
 export const createGanttChartData = (steps) => {
   let ganttChartData = [], temp = [];
   let limit = 7, isCPUFree = true;    // assuming the limit of processes to be shown per line as 7 (default value).
+  let curProcessID = null;    // current process running in the cpu
 
   steps.forEach(({ cpu, curTime }) => {
     if(isCPUFree && cpu.Pid){
       // means the cpu was free but now there's a process that started running in it
       isCPUFree = false;
+      curProcessID = cpu.Pid;
 
       temp.push({
         Pid: cpu.Pid,
@@ -57,6 +59,23 @@ export const createGanttChartData = (steps) => {
       let curTempIndex = temp.length - 1;
       temp[curTempIndex].exitingTime = curTime;
       temp[curTempIndex].timeInCPU = temp[curTempIndex].exitingTime - temp[curTempIndex].arrivalTime;
+    } else if (!isCPUFree && cpu.Pid !== curProcessID) {
+      // this indicates that the cpu is prempted before the current process could be completed
+
+      // filling the remaining details for the previous process
+      let curTempIndex = temp.length - 1;
+      temp[curTempIndex].exitingTime = curTime;
+      temp[curTempIndex].timeInCPU = temp[curTempIndex].exitingTime - temp[curTempIndex].arrivalTime;
+
+      // update data for the new process
+      curProcessID = cpu.Pid
+      temp.push({
+        Pid: cpu.Pid,
+        arrivalTime: curTime,
+        exitingTime: null,
+        timeInCPU: null,
+        color: cpu.color
+      })
     }
   })
   
@@ -92,67 +111,6 @@ export const createGanttChartData = (steps) => {
 }
 
 /* Scheduling Functions */
-
-// this is wrong.
-export const FCFS = (data) => {
-  data = createCopyJSON(data)
-
-  let newData = data.map((processData, index) => {
-    return ({
-      ...processData,
-      CT: undefined, TAT: undefined, WT: undefined, // filling empty data
-      originalIndex: index,
-    })
-  })
-  newData.sort((a, b) => Number(a.AT) - Number(b.AT))
-
-  let cpu = {}, queue = [], completed = []
-  let cpuProcessCT = -1 // required time units count at which process that is currently running in cpu will be completed
-  let curTime = 0 // current time units count
-
-  newData.map((processData, index) => {
-    if(processData.AT >= cpuProcessCT) {
-      if(cpuProcessCT !== -1) {
-        // this means that cpu really had a process running in it and its completed now
-        curTime = cpuProcessCT
-        completed.push(cpu)
-        cpu = {}
-      }
-      // cpu is free now
-
-      // adding the process to queue, so that when cpu gets free, it can pick up the process from queue
-      curTime = processData.AT
-      queue.push(processData)
-
-      // there are processes in the queue, so pick up the first one and assign it to cpu
-      cpu = queue.shift()
-      cpuProcessCT = processData.AT + cpu.BT // new cpuProcessCT
-      cpu.CT = cpuProcessCT
-    } else {
-      // cpu is busy so wait for it to get free
-      curTime = processData.AT
-      queue.push(processData)
-    }
-  })
-
-  // executing the remaining processes in the queue
-  while(queue.length){
-    curTime = cpuProcessCT
-    completed.push(cpu)
-    cpu = {}
-
-    cpu = queue.shift()
-    cpuProcessCT = curTime + cpu.BT
-    cpu.CT = cpuProcessCT
-  }
-
-  newData.map((process) => {
-    process.TAT = Number(process.CT) - Number(process.AT)
-    process.WT = Number(process.TAT) - Number(process.BT)
-    data[process.originalIndex] = process
-  })
-  return data
-}
 
 export const StepWiseFCFS = (data) => {
   data = createCopyJSON(data) // so that original data is not modified
@@ -236,7 +194,7 @@ export const StepWiseFCFS = (data) => {
 
 
   newData.map((processData) => {
-    while(cpuProcessCT !== -1 && cpuProcessCT <= processData.AT){
+    while(cpu?.Pid && cpuProcessCT < processData.AT){
       // this means that cpu had a process running in it and its completed now
       completeCurrentProcess()
 
@@ -248,7 +206,7 @@ export const StepWiseFCFS = (data) => {
     pushIntoQueue(processData)
 
     // if cpu is free then assign the process now, no need to wait
-    if(cpuProcessCT === -1) assignProcessToCPU()
+    if(! cpu?.Pid) assignProcessToCPU()
   })
 
   // executing the remaining processes in the queue
@@ -257,7 +215,7 @@ export const StepWiseFCFS = (data) => {
     assignProcessToCPU()
   }
   // considering the last process that was running in cpu
-  if(cpuProcessCT !== -1) {
+  if(cpu?.Pid) {
     completeCurrentProcess()
   }
 
@@ -378,14 +336,13 @@ export const StepWiseSJF = (data) => {
     pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevRT} (RT) - ${timeGap} (timeGap) = ${cpu.RT} time unit.`: ''}`)
   }
   const getNextProcessToAssignFromQueue = () => {
+    if(!queue.length) return;
+
     // Find the process with the minimum BT value in the queue
-    let minBTProcess = queue[0];
-    queue.map((processData) => {
-      if(processData.BT < minBTProcess.BT) minBTProcess = processData;
-    })
+    let minBTProcess = queue.reduce((prev, curr) => prev.BT < curr.BT ? prev : curr)
 
     // Remove the minBTProcess from the queue
-    queue = queue.filter((processData) => processData !== minBTProcess);
+    queue = queue.filter((processData) => processData.Pid !== minBTProcess.Pid);
     
     return minBTProcess;
   }
@@ -413,7 +370,7 @@ export const StepWiseSJF = (data) => {
     // the minBTprocess is removed from queue, check if there were more processes with same minBT value
     let minBTProcesses = queue.filter((processData) => processData.BT === nextProcess.BT)
     if(minBTProcesses.length){
-      // highlighting all the processes with same minBT value
+      // highlighting all the processes with same minBT value present in the queue
       originalIndexes.map((index) => {
         if(data[index].BT === nextProcess.BT)
           data[index].bgColor = {
@@ -423,8 +380,27 @@ export const StepWiseSJF = (data) => {
       })
       nextProcess.bgColor = { ...nextProcess.bgColor, AT: highlightResultColor }
 
+      let minATMsg = ` and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+
+      // checking if there are multiple processes with same min AT and BT.
+      let minATProcesses = minBTProcesses.filter((processData) => processData.AT === nextProcess.AT)
+      if(minATProcesses.length){
+        // highlighting all the processes with same minAT and minBT value
+        originalIndexes.map((index) => {
+          if(data[index].AT === nextProcess.AT)
+            data[index].bgColor = {
+              ...data[index].bgColor,
+              AT: highlightColor
+            }
+        })
+        nextProcess.bgColor = { ...nextProcess.bgColor, AT: highlightResultColor }
+
+        // changing the msg accordingly
+        minATMsg = `.\nAs there are multiple proceses with same minAT value as well, the process that comes first among them in the queue will be chosen and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+      }
+
       // changing the msg accordingly
-      minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+      minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen${minATMsg}`
     }
 
     cpu = nextProcess
@@ -444,7 +420,7 @@ export const StepWiseSJF = (data) => {
 
 
   newData.map((processData) => {
-    while(cpuProcessCT !== -1 && cpuProcessCT <= processData.AT){
+    while(cpu?.Pid && cpuProcessCT < processData.AT){
       // this means that cpu had a process running in it and its completed now
       completeCurrentProcess()
 
@@ -456,7 +432,7 @@ export const StepWiseSJF = (data) => {
     pushIntoQueue(processData)
 
     // if cpu is free then assign the process now, no need to wait
-    if(cpuProcessCT === -1) assignProcessToCPU()
+    if(! cpu?.Pid) assignProcessToCPU()
   })
 
   // executing the remaining processes in the queue
@@ -465,7 +441,7 @@ export const StepWiseSJF = (data) => {
     assignProcessToCPU()
   }
   // considering the last process that was running in cpu
-  if(cpuProcessCT !== -1) {
+  if(cpu?.Pid) {
     completeCurrentProcess()
   }
 
@@ -522,8 +498,9 @@ export const StepWiseSJF = (data) => {
   return steps;
 }
 
-export const StepWiseSJRF = (data) => {
+export const StepWiseSRJF = (data) => {
   data = createCopyJSON(data) // so that original data is not modified
+  data.map((process) => process.RT = process.BT)
 
   let newData = data.map((processData, index) => {
     return ({
@@ -537,9 +514,9 @@ export const StepWiseSJRF = (data) => {
   let cpu = {}, queue = [], completed = [], steps = []
   let cpuProcessCT = -1 // required time units count at which process that is currently running in cpu will be completed
   let curTime = 0 // current time units count
-  let timeGap = 0, prevRT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
+  let timeGap = 0, prevBT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
   let avgTAT = 0.0, avgWT = 0.0;
-  let minRTProcess = null; // the process with min. RT in the queue
+  let minBTProcess = { Pid: null, BT: Number.MAX_SAFE_INTEGER }; // process with min BT in the queue
 
   const updateData = (newData) => data[newData.originalIndex] = newData
   const pushInSteps = (msg) => {
@@ -559,28 +536,20 @@ export const StepWiseSJRF = (data) => {
     steps[steps.length - 1].ganttChartData = newGanttChartData;
   }
   const executeProcess = () => {
-    prevRT = cpu.RT
-    cpu.RT = cpuProcessCT - curTime
-    timeGap = prevRT - cpu.RT
+    prevBT = cpu.BT
+    cpu.RT = cpu.BT = cpuProcessCT - curTime
+    timeGap = prevBT - cpu.BT
 
-    if(! cpu.RT){
+    if(! cpu.BT){
       // that means the process has completed
       cpu.CT = curTime
-      updateData(cpu)
     }
-  }
-  const completeCurrentProcess = () => {
-    curTime = cpuProcessCT
-    executeProcess()
-    
-    completed.push(cpu.Pid)
-    let completedProcessID = cpu.Pid
-    cpu = {}
-    pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
+    updateData(cpu)
   }
   const pushIntoQueue = (processData) => {
     curTime = processData.AT
     queue.push(processData)
+    if(minBTProcess.BT > processData.BT) minBTProcess = processData
 
     let isExecuted = ! compareArraysOrJSONs(cpu, {})
     if(isExecuted){
@@ -588,19 +557,22 @@ export const StepWiseSJRF = (data) => {
       executeProcess()
     }
 
-    pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevRT} (RT) - ${timeGap} (timeGap) = ${cpu.RT} time unit.`: ''}`)
+    pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevBT} - ${timeGap} (timeGap) = ${cpu.BT} time unit.`: ''}`)
+  }
+  const findMinBTProcess = () => {
+    if(queue.length) minBTProcess = queue.reduce((prev, cur) => prev.BT < cur.BT ? prev : cur) 
+    else minBTProcess = { Pid: null, BT: Number.MAX_SAFE_INTEGER }
   }
   const getNextProcessToAssignFromQueue = () => {
-    // Find the process with the minimum BT value in the queue
-    let minBTProcess = queue[0];
-    queue.map((processData) => {
-      if(processData.BT < minBTProcess.BT) minBTProcess = processData;
-    })
+    let nextProcess = minBTProcess
 
     // Remove the minBTProcess from the queue
-    queue = queue.filter((processData) => processData !== minBTProcess);
-    
-    return minBTProcess;
+    queue = queue.filter((processData) => processData.Pid !== nextProcess.Pid);
+
+    // Find the next process with the minimum BT value in the queue
+    findMinBTProcess()
+
+    return nextProcess;
   }
   const assignProcessToCPU = () => {
     if(! queue.length){
@@ -621,12 +593,14 @@ export const StepWiseSJRF = (data) => {
     // picking up the next process
     const nextProcess = getNextProcessToAssignFromQueue()
     nextProcess.bgColor = { BT: highlightResultColor }
+
+    // initialising the msg according to current situation
     let minMsg = `The process with min. BT value among all other processes in queue is ${nextProcess.Pid}, with BT: ${nextProcess.BT}.`
 
     // the minBTprocess is removed from queue, check if there were more processes with same minBT value
     let minBTProcesses = queue.filter((processData) => processData.BT === nextProcess.BT)
     if(minBTProcesses.length){
-      // highlighting all the processes with same minBT value
+      // highlighting all the processes with same minBT value present in the queue
       originalIndexes.map((index) => {
         if(data[index].BT === nextProcess.BT)
           data[index].bgColor = {
@@ -636,8 +610,28 @@ export const StepWiseSJRF = (data) => {
       })
       nextProcess.bgColor = { ...nextProcess.bgColor, AT: highlightResultColor }
 
-      // changing the msg accordingly
-      minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+      // initialising another msg according to current situation
+      let minATMsg = ` and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+
+      // checking if there are multiple processes with same min AT and BT.
+      let minATProcesses = minBTProcesses.filter((processData) => processData.AT === nextProcess.AT)
+      if(minATProcesses.length){
+        // highlighting all the processes with same minAT and minBT value
+        originalIndexes.map((index) => {
+          if(data[index].AT === nextProcess.AT)
+            data[index].bgColor = {
+              ...data[index].bgColor,
+              AT: highlightColor
+            }
+        })
+        nextProcess.bgColor = { ...nextProcess.bgColor, AT: highlightResultColor }
+
+        // updating the msg accordingly
+        minATMsg = `.\nAs there are multiple proceses with same minAT value as well, the process that comes first among them in the queue will be chosen and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
+      }
+
+      // updating the msg accordingly
+      minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen${minATMsg}`
     }
 
     cpu = nextProcess
@@ -654,30 +648,69 @@ export const StepWiseSJRF = (data) => {
       }
     })
   }
+  const checkForPrempt = () => {
+    if(!cpu?.Pid || cpu.BT <= minBTProcess.BT) return;
+    // else premption is needed
+
+    let preemptedProcess = cpu
+    cpu = getNextProcessToAssignFromQueue()
+    cpuProcessCT = curTime + cpu.BT
+    
+    queue.push(preemptedProcess)
+    findMinBTProcess()
+
+    // highlighting the preempted and the current cpu process
+    data[preemptedProcess.originalIndex].bgColor = { Pid: highlightColor }
+    data[cpu.originalIndex].bgColor = { Pid: highlightResultColor, AT: highlightResultColor, BT: highlightResultColor }
+
+    pushInSteps(`At ${curTime} time unit, Process ${preemptedProcess.Pid} is preempted from CPU and added to Queue again and process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${preemptedProcess.Pid}: ${prevBT} - ${timeGap} (timeGap) = ${preemptedProcess.BT} time unit.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid}).`)
+
+    // resetting the highlighting back to normal
+    data[preemptedProcess.originalIndex].bgColor = { BT: 'transparent' }
+    data[cpu.originalIndex].bgColor = { AT: 'transparent', BT: 'transparent' }
+  }
+  const completeCurrentProcess = () => {
+    if (! cpu?.Pid) {
+      // console.log('Cannot complete current process: CPU is empty')
+      return;
+    }
+
+    let cpuBT = cpu.BT
+    curTime += Math.min(cpuBT, minBTProcess.BT)
+    executeProcess() // will change the cpu.BT according to the curTime
+    
+    if (cpuBT <= minBTProcess.BT) {
+      // means the cpu process is completely executed
+      completed.push(cpu.Pid)
+      let completedProcessID = cpu.Pid
+      cpu = {}
+      pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
+    } else {
+      // this means that the process that is currently running in cpu is not the one with min BT value
+      // so we need to preempt the current process and assign the process with min BT value to cpu
+      checkForPrempt()
+    }
+  }
 
 
   newData.map((processData) => {
-    if(processData.AT >= Math.min(cpuProcessCT, minRTProcess.RT)) {
+    while(cpu?.Pid && curTime + Math.min(cpu.BT, minBTProcess.BT) < processData.AT){
+      // this means that cpu had a process running in it and its completed now
+      completeCurrentProcess()
 
+      // cpu is free now so can assign new process to it
+      assignProcessToCPU()
+    }
 
+    // adding the process to queue
+    pushIntoQueue(createCopyJSON(processData))
 
-      // if(cpuProcessCT !== -1) {
-      //   // this means that cpu really had a process running in it and its completed now
-      //   completeCurrentProcess()
-      // }
-      // // cpu is free now
-
-      // // adding the process to queue, so that when cpu gets free, it can pick up the process from queue
-      // pushIntoQueue(processData)
-
-      // // there are processes in the queue, so pick up the first one and assign it to cpu
-      // assignProcessToCPU()
-    } else{
-      // cpu is busy so wait for it to get free
-      pushIntoQueue(processData)
+    checkForPrempt()
+    if (! cpu?.Pid) { 
+      // means cpu is free so assign the next process
+      assignProcessToCPU() 
     }
   })
-
 
   // executing the remaining processes in the queue
   while(queue.length){
@@ -685,10 +718,12 @@ export const StepWiseSJRF = (data) => {
     assignProcessToCPU()
   }
   // considering the last process that was running in cpu
-  if(cpuProcessCT !== -1) {
+  if(cpu?.Pid) {
     completeCurrentProcess()
   }
 
+  // resetting the BT for all the processes for calculating the TAT and WT correctly.
+  newData.map((process) => data[process.originalIndex].BT = process.BT)
 
   // calcualting TAT and WT
   data.map((process) => {
