@@ -64,10 +64,11 @@ const SaveDialogueBox = ({ isVisible=false, handleClick, data }) => {
               </div>
               
               <div className="flex flex-row justify-between items-center text-lg">
-                <label> Title: </label>
+                <label htmlFor="title"> Title: </label>
                 <input 
                   type="text" 
-                  name="title" 
+                  name="title"
+                  id="title"
                   placeholder="Title" 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -76,9 +77,10 @@ const SaveDialogueBox = ({ isVisible=false, handleClick, data }) => {
               </div>
 
               <div className="flex flex-row justify-between text-lg">
-                <label> Description: </label>
+                <label htmlFor="description"> Description: </label>
                 <textarea 
-                  name="description" 
+                  name="description"
+                  id="description" 
                   type="text"
                   placeholder="Description" 
                   value={description}

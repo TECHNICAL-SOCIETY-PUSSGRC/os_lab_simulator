@@ -92,6 +92,8 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
             <div className="flex w-full flex-row gap-10 items-center">
                 <input
                     value={title}
+                    name="title"
+                    id="title"
                     placeholder="Title"
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={!isEditing}
@@ -102,6 +104,8 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
 
             <textarea
               value={description}
+              name="description"
+              id="description"
               placeholder="Description"
               onChange={(e) => setDescription(e.target.value)}
               disabled={!isEditing}

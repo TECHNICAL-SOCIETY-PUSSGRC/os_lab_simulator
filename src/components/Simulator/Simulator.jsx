@@ -19,36 +19,6 @@ import ImportJsonDialogueBox from "./ImportJsonDialogueBox"
 
 
 const Simulator = () => {
-  const columnsBeforeRunning = useMemo(() => [
-    { Header: 'Process ID (Pid)', accessor: 'Pid' },
-    { Header: 'Arrival Time (AT)', accessor: 'AT'},
-    { Header: 'Burst Time (BT)', accessor: 'BT' },
-  ], [])
-  const columnsWhileRunning = useMemo(() => [
-    { Header: 'Process ID (Pid)', accessor: 'Pid' },
-    { Header: 'Arrival Time (AT)', accessor: 'AT'},
-    { Header: 'Burst Time (BT)', accessor: 'BT' },
-    { Header: 'Completion Time (CT)', accessor: 'CT'},
-    { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
-    { Header: 'Waiting Time (WT)', accessor: 'WT' },
-  ], [])
-  const keyBindingsData = useMemo(() => [{
-    key: '<',
-    functionality: 'Prev',
-  },{
-    key: '>',
-    functionality: 'Next',
-  },{
-    key: 'Enter',
-    functionality: 'Show Final Result',
-  },{
-    key: 'Backspace',
-    functionality: 'Restart',
-  },{
-    key: 'Escape',
-    functionality: 'Edit',
-  }], [])
-
   const algoOptionsRef = useRef(null)
   const algoRef = useRef(null)
 
@@ -84,6 +54,43 @@ const Simulator = () => {
   const [isNotifAllowedBeforeRunning, setIsNotifAllowedBeforeRunning] = useState(true)
   const [isVisibleImport, setIsVisibleImport] = useState(false)
   const [timeQuantum, setTimeQuantum] = useState(2)
+  const [RTS, setRTS] = useState(null)
+  const [priorityType, setPriorityType] = useState('higher')
+  
+  const columnsBeforeRunning = useMemo(() => {
+    const columns = [
+      { Header: 'Process ID (Pid)', accessor: 'Pid' },
+      { Header: 'Arrival Time (AT)', accessor: 'AT'},
+      { Header: 'Burst Time (BT)', accessor: 'BT' },
+    ]
+    if(algo === 'Priority') columns.push({ Header: 'Priority (P)', accessor: 'P' })
+    return columns 
+  }, [algo])
+  const columnsWhileRunning = useMemo(() => [
+    { Header: 'Process ID (Pid)', accessor: 'Pid' },
+    { Header: 'Arrival Time (AT)', accessor: 'AT'},
+    { Header: 'Burst Time (BT)', accessor: 'BT' },
+    { Header: 'Completion Time (CT)', accessor: 'CT'},
+    { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
+    { Header: 'Waiting Time (WT)', accessor: 'WT' },
+  ], [])
+  const keyBindingsData = useMemo(() => [{
+    key: '<',
+    functionality: 'Prev',
+  },{
+    key: '>',
+    functionality: 'Next',
+  },{
+    key: 'Enter',
+    functionality: 'Show Final Result',
+  },{
+    key: 'Backspace',
+    functionality: 'Restart',
+  },{
+    key: 'Escape',
+    functionality: 'Edit',
+  }], [])
+
 
   /* Helper Functions */
   const handleAnimateOpacity = () => {
@@ -142,9 +149,6 @@ const Simulator = () => {
     setNoOfProcesses(newNoOfProcesses)
     setIsEditingNoOfProcesses(false)
   }
-  const handleContextTimeChange = (e) => {
-    setContextSwitchTime(e.target.value)
-  }
   const handleFillSampleData = () => {
     const sampleData = SampleData()
     setData(sampleData)
@@ -158,7 +162,8 @@ const Simulator = () => {
       newData.push({
         Pid: "P" + (i+1),
         AT: Math.floor(Math.random() * limit),
-        BT: Math.floor(Math.random() * limit)
+        BT: Math.floor(Math.random() * limit),
+        P: Math.floor(Math.random() * limit)
       })
     }
     setData(newData)
@@ -196,6 +201,7 @@ const Simulator = () => {
       if(algo === 'SJF') return StepWiseSJF(data)
       if(algo === 'SRJF') return StepWiseSRJF(data)
       if(algo === 'RR') return StepWiseRR(data, timeQuantum)
+      console.log(data)
       toast.error('Simulation not implemented yet, Coming Soon!')
     }
 
@@ -224,6 +230,7 @@ const Simulator = () => {
     setAvgTAT(0.0)
     setAvgWT(0.0)
     setGanttChartData([])
+    setRTS(null)
   }
   const handleEdit = () => {
     setIsRunning(false)
@@ -239,6 +246,7 @@ const Simulator = () => {
     setAvgTAT(0.0)
     setAvgWT(0.0)
     setGanttChartData([])
+    setRTS(null)
   }
   const handleNext = () => {
     if(currentStepIndex === steps.length-1) return;
@@ -254,6 +262,8 @@ const Simulator = () => {
     if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
 
     setCurrentTime(curTime)
+    if(algo === 'RR') setRTS(steps[newStepIndex].RTS)
+
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)){
       scroller.scrollTo('ganttChart', { delay: 2000, smooth: true });
@@ -294,6 +304,8 @@ const Simulator = () => {
     if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
 
     setCurrentTime(curTime)
+    if(algo === 'RR') setRTS(steps[newStepIndex].RTS)
+
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
     if(JSON.stringify(ganttChartData) !== JSON.stringify(newGanttChartData)) setGanttChartData(newGanttChartData)
 
@@ -314,6 +326,8 @@ const Simulator = () => {
     if(JSON.stringify(stack) !== JSON.stringify(newStack)) setStack(newStack)
 
     setCurrentTime(curTime)
+    if(algo === 'RR') setRTS(steps[newStepIndex].RTS)
+
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
 
     let timeoutId = null
@@ -346,6 +360,7 @@ const Simulator = () => {
     setGanttChartData([])
     setAvgWT(0.0)
     setAvgTAT(0.0)
+    if(algo === 'RR') setRTS(null)
 
     const { data: newData } = steps[0]
     if(JSON.stringify(data) !== JSON.stringify(newData)) setData(newData)
@@ -380,7 +395,7 @@ const Simulator = () => {
     return () => {
       document.body.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses, algo]);
+  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses, algo, timeQuantum]);
 
   /* Writing down a bug here that can arise in future. */ 
   /*  
@@ -574,6 +589,15 @@ const Simulator = () => {
             {explanationMessage.map((msg, index) => <p key={index}> {msg} </p>)}
           </div>
         </div>
+        
+        {/* Time Before Switch */}
+        {algo === 'RR' && <div className="flex flex-row gap-4">
+          <div className="flex flex-col group">
+            <span> Time Before Switch: </span>
+            <div className={`h-[2px] bg-white transition-all duration-1000 ease-in-out ${animateTime && 'animate-line'}`} />
+          </div>
+          <span> {RTS} </span>
+        </div>}
       </Element>}
 
       <div className="w-full flex flex-row pl-5 py-10 gap-16">
@@ -657,10 +681,33 @@ const Simulator = () => {
                 min={0.0}
                 step={0.1} 
                 value={contextSwitchTime} 
-                onChange={handleContextTimeChange} 
+                onChange={(e) => setContextSwitchTime(e.target.value)} 
                 className="ml-2 px-2 w-[80px] text-center bg-transparent border-b-2 focus:outline-none"
               />
             </div> */}
+            
+            {/* Time Quantum */}
+            {algo === 'RR' && <div className="flex flex-row items-center">
+              Time Quantum:
+              <input 
+                type="number" 
+                name="timeQuantum"
+                min={0}
+                value={timeQuantum} 
+                onChange={(e) => setTimeQuantum(e.target.value)} 
+                className="ml-2 px-2 w-[80px] text-center bg-transparent border-b-2 focus:outline-none"
+              />
+            </div>}
+
+            {/* Priority Type */}
+            {algo === 'Priority' && <div>
+              <p><label htmlFor="priorityType"> Higher the value, </label></p>
+              <select name="priorityType" id="priorityType" className="text-xl bg-transparent border my-2 px-2" value={priorityType} onChange={(e) => setPriorityType(e.target.value)}>
+                <option value="higher" className="text-lg bg-white text-black"> Higher </option>
+                <option value="lower" className="text-lg bg-white text-black"> Lower </option>
+              </select>
+              <p><label htmlFor="priorityType"> the priority </label></p>
+            </div>}
             
             <ShinyButton 
               className="text-left border-b-2 w-fit"

@@ -67,6 +67,7 @@ const Table = ({ data, setData, setNoOfProcesses, animateOpacity=false, columns,
                             animateOpacity={animateOpacity}
                             isRunning={isRunning}
                             isDisabled={isDisableEditing}
+                            cellID={cell.column.id}
                           />
                         )
                     })}

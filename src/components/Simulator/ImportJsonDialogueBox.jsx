@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ShinyButton } from "..";
 
 const ImportJsonDialogueBox = ({ isVisible, handleClick, setData, setNoOfProcesses }) => {
-  const [jsonData, setJSONData] = useState(null);
+  const [jsonData, setJSONData] = useState('');
 
   const handleImport = () => {
     const data = JSON.parse(jsonData)
@@ -23,6 +23,8 @@ const ImportJsonDialogueBox = ({ isVisible, handleClick, setData, setNoOfProcess
         <div className="flex flex-col min-w-[600px] rounded-xl text-xl px-10 py-10 gap-5 bg-gray-200 text-black">
           <textarea
             value={jsonData}
+            name="jsonData"
+            id="jsonData"
             placeholder="Enter the JSON Data"
             onChange={(e) => setJSONData(e.target.value)}
             className='text-left w-full text-gray-950 min-h-[150px] text-base focus:outline-none bg-transparent p-2 border border-black'
