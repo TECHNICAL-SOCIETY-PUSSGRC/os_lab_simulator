@@ -1,11 +1,21 @@
 import { useState } from "react";
+import { toast } from 'react-hot-toast'
 import { ShinyButton } from "..";
 
 const ImportJsonDialogueBox = ({ isVisible, handleClick, setData, setNoOfProcesses }) => {
   const [jsonData, setJSONData] = useState('');
 
   const handleImport = () => {
-    const data = JSON.parse(jsonData)
+    let data;
+    
+    try {
+      data = JSON.parse(jsonData)
+    } catch (error) {
+      console.log(error)
+      toast.error('Invalid JSON Data!')
+      return;
+    }
+    
     setData(data)
     setNoOfProcesses(data.length)
     setJSONData('')
@@ -30,12 +40,18 @@ const ImportJsonDialogueBox = ({ isVisible, handleClick, setData, setNoOfProcess
             className='text-left w-full text-gray-950 min-h-[150px] text-base focus:outline-none bg-transparent p-2 border border-black'
           />
 
-          <ShinyButton
-            className="text-xl border border-black px-3 py-2 bg-blue-300 ml-auto"
-            onClick={handleImport}
-          >
-            Import
-          </ShinyButton>
+          <div className="flex flex-row gap-5 w-fit ml-auto">
+            <ShinyButton className="text-xl border border-black px-3 py-2 bg-red-400" onClick={() => { setJSONData(''), handleClick() }}>
+              Cancel
+            </ShinyButton>
+
+            <ShinyButton
+              className="text-xl border border-black px-3 py-2 bg-blue-300 ml-auto"
+              onClick={handleImport}
+            >
+              Import
+            </ShinyButton>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { ShinyButton } from '..'
-import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF, StepWiseSRJF, StepWiseRR } from './data'
+import { SampleData, createColorSchemes, StepWiseFCFS, StepWiseSJF, StepWiseSRJF, StepWiseRR, StepWisePriority } from './data'
 import { Table, PieChart } from '.'
 import AlgorithmsData from '../../assets/DataFiles/AlgorithmsData'
 import { Tooltip } from 'react-tooltip'
@@ -30,7 +30,7 @@ const Simulator = () => {
   const [isRunning, setIsRunning] = useState(false)
   const [animateShine, setAnimateShine] = useState(false)
   const [animateOpacity, setAnimateOpacity] = useState(false)
-  const [queue, setQueue] = useState([{ Pid: 'Pid', AT: 'AT', BT: 'BT'}])
+  const [queue, setQueue] = useState([{ Pid: 'Pid', AT: 'AT', BT: 'BT', P: 'P' }])
   const [stack, setStack] = useState(['Pid'])
   const [cpu, setCPU] = useState({Pid: 'Pid', RT: 'RT'})
   const [currentTime, setCurrentTime] = useState(0)
@@ -66,14 +66,18 @@ const Simulator = () => {
     if(algo === 'Priority') columns.push({ Header: 'Priority (P)', accessor: 'P' })
     return columns 
   }, [algo])
-  const columnsWhileRunning = useMemo(() => [
-    { Header: 'Process ID (Pid)', accessor: 'Pid' },
-    { Header: 'Arrival Time (AT)', accessor: 'AT'},
-    { Header: 'Burst Time (BT)', accessor: 'BT' },
-    { Header: 'Completion Time (CT)', accessor: 'CT'},
-    { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
-    { Header: 'Waiting Time (WT)', accessor: 'WT' },
-  ], [])
+  const columnsWhileRunning = useMemo(() => {
+    const columns = [
+      { Header: 'Process ID (Pid)', accessor: 'Pid' },
+      { Header: 'Arrival Time (AT)', accessor: 'AT'},
+      { Header: 'Burst Time (BT)', accessor: 'BT' },
+      { Header: 'Completion Time (CT)', accessor: 'CT'},
+      { Header: 'Turnaround Time (TAT)', accessor: 'TAT'},
+      { Header: 'Waiting Time (WT)', accessor: 'WT' },
+    ]
+    if(algo === 'Priority') columns.splice(3, 0, { Header: 'Priority (P)', accessor: 'P' })
+    return columns
+  }, [algo])
   const keyBindingsData = useMemo(() => [{
     key: '<',
     functionality: 'Prev',
@@ -201,7 +205,7 @@ const Simulator = () => {
       if(algo === 'SJF') return StepWiseSJF(data)
       if(algo === 'SRJF') return StepWiseSRJF(data)
       if(algo === 'RR') return StepWiseRR(data, timeQuantum)
-      console.log(data)
+      if(algo === 'Priority') return StepWisePriority(data, priorityType)
       toast.error('Simulation not implemented yet, Coming Soon!')
     }
 
@@ -224,7 +228,7 @@ const Simulator = () => {
     setNoOfProcesses(0)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT', P: 'P' }])
     setStack(['Pid'])
     setExplanationMessage([''])
     setAvgTAT(0.0)
@@ -240,7 +244,7 @@ const Simulator = () => {
     setCurrentStepIndex(-1)
     setCurrentTime(0)
     setCPU({Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT'}])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT', P: 'P' }])
     setStack(['Pid'])
     setExplanationMessage([''])
     setAvgTAT(0.0)
@@ -291,7 +295,7 @@ const Simulator = () => {
       setExplanationMessage([''])
       setCurrentTime(0)
       setCPU({ Pid: 'Pid', RT: 'RT'})
-      setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
+      setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT', P: 'P' }])
       setStack(['Pid'])
       return;
     }
@@ -355,7 +359,7 @@ const Simulator = () => {
     setExplanationMessage([''])
     setCurrentTime(0)
     setCPU({ Pid: 'Pid', RT: 'RT'})
-    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT' }])
+    setQueue([{ Pid: 'Pid', AT: 'AT', BT: 'BT', P: 'P' }])
     setStack(['Pid'])
     setGanttChartData([])
     setAvgWT(0.0)
@@ -370,6 +374,15 @@ const Simulator = () => {
   }
   const handleLoad = () => {
     setIsVisibleLoad(true)
+  }
+  const handleCopy = () => {
+    const copyData = data.map((process) => {
+      return { 
+        Pid: process.Pid, AT: process.AT, BT: process.BT, P: process.P
+      }
+    })
+    navigator.clipboard.writeText(JSON.stringify(copyData))
+    toast.success('Copied to clipboard!')
   }
   
 
@@ -395,7 +408,7 @@ const Simulator = () => {
     return () => {
       document.body.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses, algo, timeQuantum]);
+  }, [isRunning, currentStepIndex, ganttChartData, data, tempNoOfProcesses, algo, timeQuantum, priorityType]);
 
   /* Writing down a bug here that can arise in future. */ 
   /*  
@@ -598,6 +611,11 @@ const Simulator = () => {
           </div>
           <span> {RTS} </span>
         </div>}
+        
+        {/* Priority Mssg Section */}
+        {algo === 'Priority' && <p className="text-lg w-[200px] h-fit border p-3">
+          Higher the value, <span className="capitalize"> {priorityType} </span> the priority.
+        </p>}
       </Element>}
 
       <div className="w-full flex flex-row pl-5 py-10 gap-16">
@@ -622,7 +640,7 @@ const Simulator = () => {
               <h2 className="text-2xl border-b-2 py-2 uppercase tracking-wide">Queue</h2>
               <div className="flex flex-col py-3 gap-3 text-xl">
                 {
-                  queue.map(({ Pid, AT, BT }, index) => {
+                  queue.map(({ Pid, AT, BT, P }, index) => {
                     return (
                       <div key={index} className={`flex flex-row items-center justify-evenly text-xl transition-opacity duration-1000 ease-in-out ${isQueueEmpty? 'opacity-0': 'opacity-100'}`}>
                         <span> {Pid} </span>:
@@ -630,6 +648,9 @@ const Simulator = () => {
                           <span> {AT} </span>,
                         </>}
                         <span> {BT} </span>
+                        {algo ==='Priority' && <>
+                          ,<span> {P} </span>
+                        </>}
                       </div>
                     )
                   })
@@ -821,11 +842,19 @@ const Simulator = () => {
           </>
           :  /* Simulator Buttons Section Before Running */
           <div className="flex flex-row w-full justify-between mt-5 pr-10">
-            <ShinyButton 
-              className="text-xl border px-3 py-2"
-              text="Import JSON file"
-              onClick={() => setIsVisibleImport(true)}
-            />
+            <div className="flex flex-row gap-5">
+              <ShinyButton 
+                className="text-xl border px-3 py-2"
+                text="Copy"
+                onClick={handleCopy}
+              />
+
+              <ShinyButton 
+                className="text-xl border px-3 py-2"
+                text="Import JSON file"
+                onClick={() => setIsVisibleImport(true)}
+              />
+            </div>
 
             <div className="flex flex-row gap-5">
               <ShinyButton 
@@ -936,11 +965,11 @@ const Simulator = () => {
           </div>}
       </div>}
 
-      <SaveInputDialogueBox 
+      {isVisibleSave && <SaveInputDialogueBox 
         isVisible={isVisibleSave} 
         handleClick={() => setIsVisibleSave(false)}
         data={data}
-      />
+      />}
 
       {isVisibleLoad && <LoadAllInputsDialogueBox 
         isVisible={isVisibleLoad} 

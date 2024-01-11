@@ -17,7 +17,11 @@ const LoadAllInputsDialogueBox = ({ isVisible=false, handleClick, setData, setNo
   const [index, setIndex] = useState(-1)
   
   const { isSignedIn, user, isLoaded } = useUser();
-  if (!isLoaded) return null;
+  if (!isLoaded) {
+    toast.error('Network Error!')
+    handleClick()
+    return null;
+  }
 
   const handleShowData = (ind) => {
     setIsItemOpen(true)

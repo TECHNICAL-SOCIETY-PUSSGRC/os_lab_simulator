@@ -12,6 +12,7 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
     { Header: 'Process ID (Pid)', accessor: 'Pid' },
     { Header: 'Arrival Time (AT)', accessor: 'AT'},
     { Header: 'Burst Time (BT)', accessor: 'BT' },
+    { Header: 'Priority (P)', accessor: 'P' },
   ], [])
 
   const [title, setTitle] = useState(curTitle);
@@ -74,7 +75,7 @@ const LoadInputsDialogueBox = ({ isVisible=false, handleClick, userName, title: 
   const handleCopy = () => {
     const copyData = data.map((process) => {
       return { 
-        Pid: process.Pid, AT: process.AT, BT: process.BT
+        Pid: process.Pid, AT: process.AT, BT: process.BT, P: process.P
       }
     })
     navigator.clipboard.writeText(JSON.stringify(copyData))

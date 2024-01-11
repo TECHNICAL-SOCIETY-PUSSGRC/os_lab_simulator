@@ -13,7 +13,11 @@ const SaveDialogueBox = ({ isVisible=false, handleClick, data }) => {
   const [description, setDescription] = useState('');
 
   const { user, isLoaded } = useUser();
-  if (!isLoaded) return null;
+  if (!isLoaded) {
+    toast.error('Network Error!')
+    handleClick()
+    return null;
+  }
 
   const saveData = async () => {
     try {

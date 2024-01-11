@@ -3,7 +3,7 @@ export const SampleData = () => [
       "Pid": "P1",
       "AT": 0,
       "BT": 4,
-      "P": 1,
+      "P": 0,
   },{
       "Pid": "P2",
       "AT": 3,
@@ -13,7 +13,7 @@ export const SampleData = () => [
       "Pid": "P3",
       "AT": 2,
       "BT": 2,
-      "P": 0,
+      "P": 1,
   }
 ]
 
@@ -677,7 +677,7 @@ export const StepWiseSRJF = (data) => {
     findMinBTProcess()
 
     // highlighting the preempted and the current cpu process
-    preemptedProcess.bgColor = { Pid: highlightColor }
+    preemptedProcess.bgColor = { Pid: highlightColor, BT: highlightColor }
     updateData(preemptedProcess)
 
     cpu.bgColor = { Pid: highlightResultColor, AT: highlightResultColor, BT: highlightResultColor }
@@ -1022,10 +1022,10 @@ export const StepWisePriority = (data, priorityType) => {
   let curTime = 0 // current time units count
   let timeGap = 0, prevBT = 0 // time units passed since last process was added in cpu, prev remaining time of process in cpu
   let avgTAT = 0.0, avgWT = 0.0;
-  let minBTProcess = { Pid: null, BT: Number.MAX_SAFE_INTEGER }; // process with min BT in the queue
+  let maxPriorityProcess = { Pid: null }; // process with max priority in the queue
 
   // Notes:
-  // 1) whenever updates the queue, update the minBTProcess accordingly, always
+  // 1) whenever updates the queue, update the maxPriorityProcess accordingly, always
   // 2) whenever updates the cpu, update the cpuProcess time always, for data consistency
   // 3) do not forget to remove highlighting after implementing it
 
@@ -1057,10 +1057,19 @@ export const StepWisePriority = (data, priorityType) => {
     }
     updateData(cpu)
   }
+  const getProcesswithMaxPriority = (a, b) => {
+    if(!a.Pid) a.P = (priorityType === 'higher')? Number.MIN_SAFE_INTEGER: Number.MAX_SAFE_INTEGER;
+    if(!b.Pid) b.P = (priorityType === 'higher')? Number.MIN_SAFE_INTEGER: Number.MAX_SAFE_INTEGER;
+
+    if(priorityType === 'higher') return a.P >= b.P? a: b;
+    return a.P <= b.P? a: b;
+  }
   const pushIntoQueue = (processData) => {
     curTime = processData.AT
     queue.push(processData)
-    if(minBTProcess.BT > processData.BT) minBTProcess = processData
+
+    // updating the maxPriorityProcess
+    maxPriorityProcess = getProcesswithMaxPriority(maxPriorityProcess, processData)
 
     let isExecuted = ! compareArraysOrJSONs(cpu, {})
     if(isExecuted){
@@ -1070,18 +1079,18 @@ export const StepWisePriority = (data, priorityType) => {
 
     pushInSteps(`At ${curTime} time unit, Process ${processData.Pid} is arrived & is added to queue.${isExecuted? `\nRemaining Time of ${cpu.Pid} in CPU: ${prevBT} - ${timeGap} (timeGap) = ${cpu.BT} time unit.`: ''}`)
   }
-  const findMinBTProcess = () => {
-    if(queue.length) minBTProcess = queue.reduce((prev, cur) => prev.BT < cur.BT ? prev : cur) 
-    else minBTProcess = { Pid: null, BT: Number.MAX_SAFE_INTEGER }
+  const findMaxPriorityProcess = () => {
+    if(queue.length) maxPriorityProcess = queue.reduce((prev, cur) => getProcesswithMaxPriority(prev, cur))
+    else maxPriorityProcess = { Pid: null }
   }
   const getNextProcessToAssignFromQueue = () => {
-    let nextProcess = minBTProcess
+    let nextProcess = maxPriorityProcess
 
-    // Remove the minBTProcess from the queue
+    // Remove the maxPriorityProcess from the queue
     queue = queue.filter((processData) => processData.Pid !== nextProcess.Pid);
 
-    // Find the next process with the minimum BT value in the queue
-    findMinBTProcess()
+    // Find the next process with the max priority process in the queue
+    findMaxPriorityProcess()
 
     return nextProcess;
   }
@@ -1091,27 +1100,23 @@ export const StepWisePriority = (data, priorityType) => {
     // Highlighting the orginal Indexes of the elements present in queue
     let originalIndexes = []
     queue.map((processData) => originalIndexes.push(processData.originalIndex))
-    originalIndexes.map((index) => {
-      data[index].bgColor = {
-        BT: highlightColor
-      }
-    })
+    originalIndexes.map((index) => data[index].bgColor = { P: highlightColor })
 
     // picking up the next process
     const nextProcess = getNextProcessToAssignFromQueue()
-    nextProcess.bgColor = { BT: highlightResultColor }
+    nextProcess.bgColor = { P: highlightResultColor }
 
     // initialising the msg according to current situation
-    let minMsg = `The process with min. BT value among all other processes in queue is ${nextProcess.Pid}, with BT: ${nextProcess.BT}.`
+    let msg = `The process with ${priorityType === 'higher'? 'max': 'min'} P value and max Priority among all other processes in queue is ${nextProcess.Pid}.`
 
-    // the minBTprocess is removed from queue, check if there were more processes with same minBT value
-    let minBTProcesses = queue.filter((processData) => processData.BT === nextProcess.BT)
-    if(minBTProcesses.length){
-      // highlighting all the processes with same minBT value present in the queue
+    // the maxPriorityProcess is removed from the queue, check if there were more processes with same P value
+    let maxPriorityProcesses = queue.filter((processData) => processData.P === nextProcess.P)
+    if(maxPriorityProcesses.length){
+      // highlighting all the processes with same P value as maxPriorityProcess.P present in the queue
       originalIndexes.map((index) => {
-        if(data[index].BT === nextProcess.BT)
+        if(data[index].P === nextProcess.P)
           data[index].bgColor = {
-            BT: highlightResultColor,
+            P: highlightResultColor,
             AT: highlightColor
           }
       })
@@ -1120,10 +1125,10 @@ export const StepWisePriority = (data, priorityType) => {
       // initialising another msg according to current situation
       let minATMsg = ` and i.e. ${nextProcess.Pid}, with AT: ${nextProcess.AT}.`
 
-      // checking if there are multiple processes with same min AT and BT.
-      let minATProcesses = minBTProcesses.filter((processData) => processData.AT === nextProcess.AT)
+      // checking if there are multiple processes with same min AT and P.
+      let minATProcesses = maxPriorityProcesses.filter((processData) => processData.AT === nextProcess.AT)
       if(minATProcesses.length){
-        // highlighting all the processes with same minAT and minBT value
+        // highlighting all the processes with same minAT and P value
         originalIndexes.map((index) => {
           if(data[index].AT === nextProcess.AT)
             data[index].bgColor = {
@@ -1138,66 +1143,57 @@ export const StepWisePriority = (data, priorityType) => {
       }
 
       // updating the msg accordingly
-      minMsg = `As there are multiple processes present with the same min. BT value: ${nextProcess.BT}, the process with min. AT value among them is chosen${minATMsg}`
+      msg = `As there are multiple processes present with the same P value: ${nextProcess.P}, the process with min. AT value among them is chosen${minATMsg}`
     }
 
-    return { nextProcess, minMsg }
+    return { nextProcess, msg }
   }
   const assignProcessToCPU = () => {
-    if(! queue.length){
-      // console.log("Cannot assign process to cpu: Queue is Emtpy");
-      cpuProcessCT = -1
+    if(cpu?.Pid || !queue.length){
+      if(!queue.length) cpuProcessCT = -1;
       return;
     }
 
-    // getting the next process while highlighting the steps
-    let { nextProcess, minMsg} = getAndHighlightNextProcess()
+    // getting the next process while highlighting the values in the queue
+    let { nextProcess, msg } = getAndHighlightNextProcess()
     cpu = nextProcess
     updateData(cpu)
 
     cpuProcessCT = curTime + cpu.BT
     executeProcess()
-    pushInSteps(`At ${curTime} time unit, CPU is free.\n${minMsg}\nHence, Process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of P1).`)
+    pushInSteps(`At ${curTime} time unit, CPU is free.\n${msg}\nHence, Process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of P1).`)
 
-    // resetting highlightning back to normal
-    data.map((process) => {
-      process.bgColor = {
-        Pid: 'transparent', AT: 'transparent', BT: 'transparent'
-      }
-    })
+    // resetting the highlighting
+    data.map((process) => process.bgColor = {})
   }
   const handlePremption = () => {
     if(!queue.length) return;
 
     let preemptedProcess = cpu
 
-    // getting the next process while highlighting the steps
+    // getting the next process while highlighting the values in the queue
     cpu = getAndHighlightNextProcess().nextProcess
     cpuProcessCT = curTime + cpu.BT
     
-    // updating the queue and the minBTProcess
+    // updating the queue and the maxPriorityProcess
     queue.push(preemptedProcess)
-    findMinBTProcess()
+    findMaxPriorityProcess()
 
     // highlighting the preempted and the current cpu process
-    preemptedProcess.bgColor = { Pid: highlightColor }
+    preemptedProcess.bgColor = { Pid: highlightColor, P: highlightColor }
     updateData(preemptedProcess)
 
-    cpu.bgColor = { Pid: highlightResultColor, AT: highlightResultColor, BT: highlightResultColor }
+    cpu.bgColor = { Pid: highlightResultColor, P: highlightResultColor }
     updateData(cpu)
     
-
-    pushInSteps(`At ${curTime} time unit, Process ${preemptedProcess.Pid} is preempted from CPU and added to Queue again and process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${preemptedProcess.Pid}: ${prevBT} - ${timeGap} (timeGap) = ${preemptedProcess.BT} time unit.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid}).`)
-
-    // resetting highlightning back to normal
-    data.map((process) => {
-      process.bgColor = {
-        Pid: 'transparent', AT: 'transparent', BT: 'transparent'
-      }
-    })
+    pushInSteps(`At ${curTime} time unit, due to the priority difference, Process ${preemptedProcess.Pid} is preempted from CPU and added to Queue again and process ${cpu.Pid} is assigned to CPU.\nRemaining Time of ${preemptedProcess.Pid}: ${prevBT} - ${timeGap} (timeGap) = ${preemptedProcess.BT} time unit.\nRemaining Time of ${cpu.Pid} in CPU: ${cpu.BT} time unit (BT of ${cpu.Pid}).`)
+  
+    // resetting the highlighting
+    cpu.bgColor = {}
+    data.map((process) => process.bgColor = {})
   }
   const checkForPrempt = () => {
-    if(!cpu?.Pid || !queue.length || cpu.BT <= minBTProcess.BT) return;
+    if(!cpu?.Pid || !queue.length || getProcesswithMaxPriority(cpu, maxPriorityProcess).Pid === cpu.Pid) return;
     // else premption is needed
 
     handlePremption()
@@ -1208,48 +1204,40 @@ export const StepWisePriority = (data, priorityType) => {
       return;
     }
 
-    let oldCPUBT = cpu.BT
-    curTime += Math.min(oldCPUBT, minBTProcess.BT)
-    executeProcess() // will change the cpu.BT according to the curTime
-    
-    if (oldCPUBT <= minBTProcess.BT) {
-      // means the cpu process is completely executed
-      completed.push(cpu.Pid)
-      let completedProcessID = cpu.Pid
-      cpu = {}
-      pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
-    } else if(queue.length) {
-      // this means that the process that is currently running in cpu is not the one with min BT value
-      // so we need to preempt the current process and assign the process with min BT value to cpu
-      handlePremption()
-    }
+    curTime += cpu.BT
+    executeProcess() // will change the cpu.BT according to the updated curTime
+
+    // means the cpu process is completely executed
+    completed.push(cpu.Pid)
+    let completedProcessID = cpu.Pid
+    cpu = {}
+    pushInSteps(`At ${curTime} time unit, Process ${completedProcessID} is completed.`)
   }
 
 
   newData.map((processData) => {
-    while(cpu?.Pid && curTime + Math.min(cpu.BT, minBTProcess.BT) < processData.AT){
+    while(cpu?.Pid && curTime + cpuProcessCT < processData.AT){
       // this means that cpu had a process running in it
       completeCurrentProcessExecution()
 
       // if cpu is free now then can assign new process to it
-      if(!cpu?.Pid) assignProcessToCPU()
+      assignProcessToCPU()
     }
 
     // adding the process to queue
     pushIntoQueue(createCopyJSON(processData))
 
     checkForPrempt()
-    // if cpu is free now then assign new process to it
-    if(!cpu?.Pid) assignProcessToCPU()
+    assignProcessToCPU()  // if cpu is free now then assign new process to it
   })
 
   // executing the remaining processes in the queue
   while(queue.length){
     completeCurrentProcessExecution()
-    if(!cpu?.Pid) assignProcessToCPU()
+    assignProcessToCPU()
   }
   // considering the last process that was running in cpu
-  if(cpu?.Pid) completeCurrentProcessExecution()
+  completeCurrentProcessExecution()
 
   // resetting the BT for all the processes for calculating the TAT and WT correctly.
   newData.map((process) => data[process.originalIndex].BT = process.BT)
